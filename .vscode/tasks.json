@@ -1,0 +1,39 @@
+{
+    "version": "2.0.0",
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "dotnetCommand",
+            "description": "Run build or clean command?",
+            "options": [
+                "build",
+                "clean"
+            ],
+            "default": "build"
+        },
+        {
+            "type": "pickString",
+            "id": "dotnetConfiguration",
+            "description": "Select Release or Debug configuration?",
+            "options": [
+                "Release",
+                "Debug"
+            ],
+            "default": "Release"
+        }
+    ],
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "${workspaceFolder}/Script/compile.sh -t ${input:dotnetCommand} -c ${input:dotnetConfiguration}",
+            "windows": {
+                "command": "${workspaceFolder}\\Script\\compile.ps1 -t ${input:dotnetCommand} -c ${input:dotnetConfiguration}"
+             },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
