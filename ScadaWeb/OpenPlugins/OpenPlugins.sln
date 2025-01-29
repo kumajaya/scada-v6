@@ -49,6 +49,14 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlgSchBasicComp.Shared", "P
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlgScheme.EditorWeb", "PlgScheme.EditorWeb\PlgScheme.EditorWeb.csproj", "{2418118A-C3C1-4BA0-A4D2-B3C9F76C4006}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PlgSchAnekaComp", "PlgSchAnekaComp", "{7A71E69C-0DFC-D158-30F0-DA59389106B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlgSchAnekaComp", "PlgSchAnekaComp\PlgSchAnekaComp.csproj", "{2BEAD356-1885-4C29-8E22-73189DF20125}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlgSchAnekaComp.View", "PlgSchAnekaComp.View\PlgSchAnekaComp.View.csproj", "{E4B653EA-AC1C-4E2A-8537-53709E220841}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "PlgSchAnekaComp.Shared", "PlgSchAnekaComp.Shared\PlgSchAnekaComp.Shared.shproj", "{C828DE37-068E-41C0-960B-919E1485AF57}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +127,14 @@ Global
 		{2418118A-C3C1-4BA0-A4D2-B3C9F76C4006}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2418118A-C3C1-4BA0-A4D2-B3C9F76C4006}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2418118A-C3C1-4BA0-A4D2-B3C9F76C4006}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2BEAD356-1885-4C29-8E22-73189DF20125}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2BEAD356-1885-4C29-8E22-73189DF20125}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2BEAD356-1885-4C29-8E22-73189DF20125}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2BEAD356-1885-4C29-8E22-73189DF20125}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4B653EA-AC1C-4E2A-8537-53709E220841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4B653EA-AC1C-4E2A-8537-53709E220841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4B653EA-AC1C-4E2A-8537-53709E220841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4B653EA-AC1C-4E2A-8537-53709E220841}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,6 +158,9 @@ Global
 		{48540890-21B4-4400-8290-071112B30D53} = {71F74BFA-D912-41E6-9982-9CAC6C61B324}
 		{A9CC759A-54F9-44FB-AD77-DD8F306668F7} = {AD970186-50D1-4A54-B711-CEFD8CC0471F}
 		{2418118A-C3C1-4BA0-A4D2-B3C9F76C4006} = {1C746D2E-749E-408B-A180-63AD78EFFAFC}
+		{2BEAD356-1885-4C29-8E22-73189DF20125} = {7A71E69C-0DFC-D158-30F0-DA59389106B3}
+		{E4B653EA-AC1C-4E2A-8537-53709E220841} = {7A71E69C-0DFC-D158-30F0-DA59389106B3}
+		{C828DE37-068E-41C0-960B-919E1485AF57} = {7A71E69C-0DFC-D158-30F0-DA59389106B3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19C6959B-66D1-4335-AA8A-0E2F23894099}
@@ -149,6 +168,7 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		PlgWebPage.Shared\PlgWebPage.Shared.projitems*{48540890-21b4-4400-8290-071112b30d53}*SharedItemsImports = 13
 		PlgSchBasicComp.Shared\PlgSchBasicComp.Shared.projitems*{a9cc759a-54f9-44fb-ad77-dd8f306668f7}*SharedItemsImports = 13
+		PlgSchAnekaComp.Shared\PlgSchAnekaComp.Shared.projitems*{c828de37-068e-41c0-960b-919e1485af57}*SharedItemsImports = 13
 		PlgWebPage.Shared\PlgWebPage.Shared.projitems*{ac8ca944-d55f-4aea-92ed-34379aae0445}*SharedItemsImports = 5
 		PlgWebPage.Shared\PlgWebPage.Shared.projitems*{c85cd47d-4492-4229-8d28-8579b063365a}*SharedItemsImports = 5
 		PlgSchBasicComp.Shared\PlgSchBasicComp.Shared.projitems*{decef963-2048-4c8d-adf1-5f8c90d9b4a8}*SharedItemsImports = 5

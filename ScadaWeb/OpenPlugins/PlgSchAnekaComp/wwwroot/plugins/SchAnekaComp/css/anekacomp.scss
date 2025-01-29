@@ -1,0 +1,207 @@
+﻿/* Aneka */
+.aneka {
+	&.undef {
+	  visibility: hidden;
+	}
+  }
+
+  .aneka-border {
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	border-radius: 4px;
+  }
+
+  .aneka-container {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  }
+
+  /* SVG Gauge */
+  /* ------ Default Style ---------- */
+  .gauge-container {
+	width: 100%;
+	height: 100%;
+	display: block;
+	float: left;
+	/* padding: 10px;
+	background-color: #222;
+	margin: 7px; */
+	border-radius: 3px;
+	position: relative;
+
+	> .label {
+	  position: absolute;
+	  right: 0;
+	  top: 0;
+	  display: inline-block;
+	  background: rgba(0, 0, 0, 0.5);
+	  font-family: monospace;
+	  font-size: 0.8em;
+	  padding: 5px 10px;
+	}
+
+	> .gauge {
+	  .dial {
+		stroke: #334455;
+		stroke-width: 2;
+		fill: rgba(0, 0, 0, 0);
+	  }
+
+	  .value {
+		stroke: #2fe3ff;
+		stroke-width: 2;
+		fill: rgba(0, 0, 0, 0);
+	  }
+
+	  .value-text {
+		fill: #2fe3ff;
+		font-family: sans-serif;
+		font-weight: bold;
+		font-size: 0.8em;
+	  }
+	}
+  }
+
+  /* ------- Alternate Style ------- */
+  .wrapper {
+	height: 100px;
+	float: left;
+	margin: 7px;
+	overflow: hidden;
+
+	> .gauge-container {
+	  margin: 0;
+	}
+  }
+
+  .gauge-container {
+	&.two {
+	  > .gauge {
+		.dial {
+		  stroke: #334455;
+		  stroke-width: 10;
+		}
+
+		.value {
+		  stroke: orange;
+		  stroke-dasharray: none;
+		  stroke-width: 13;
+		}
+
+		.value-text {
+		  fill: #ccc;
+		  font-weight: 100;
+		  font-size: 1em;
+		}
+	  }
+	}
+
+	&.three {
+	  > .gauge {
+		.dial {
+		  stroke: #334455;
+		  stroke-width: 2;
+		}
+
+		.value {
+		  stroke: #C9DE3C;
+		  stroke-width: 5;
+		}
+
+		.value-text {
+		  fill: #C9DE3C;
+		}
+	  }
+	}
+
+	&.four {
+	  > .gauge {
+		.dial {
+		  stroke: #334455;
+		  stroke-width: 10;
+		}
+
+		.value {
+		  stroke: #F32450;
+		  stroke-dasharray: none;
+		  stroke-width: 10;
+		}
+
+		.value-text {
+		  fill: #F32450;
+		  transform: translate3d(26%, 20%, 0);
+		  display: inline-block;
+		}
+	  }
+
+	  .value-text {
+		color: #F32450;
+		font-weight: 100;
+		position: absolute;
+		bottom: 18%;
+		right: 10%;
+		display: inline-block;
+	  }
+	}
+
+	&.five {
+	  > .gauge {
+		.dial {
+		  stroke: #334455;
+		  stroke-width: 5;
+		}
+
+		.value {
+		  stroke: #F8774B;
+		  stroke-dasharray: 25 1;
+		  stroke-width: 5;
+		}
+
+		.value-text {
+		  fill: #F8774B;
+		  font-size: 0.7em;
+		}
+	  }
+	}
+
+	&.six {
+	  > .gauge {
+		.dial {
+		  stroke: #334455;
+		  fill: "#334455";
+		  stroke-width: 20;
+		}
+
+		.value {
+		  stroke: #FF6DAF;
+		  stroke-width: 20;
+		}
+
+		.value-text {
+		  fill: #FF6DAF;
+		  font-size: 0.7em;
+		}
+	  }
+	}
+
+	&.seven {
+	  > .gauge {
+		.dial {
+		  stroke: transparent;
+		  stroke-width: 5;
+		  transform: scale(0.9, 0.9) translate3d(5.5px, 5.5px, 0);
+		  fill: rgba(148, 112, 57, 0.42);
+		}
+
+		.value {
+		  stroke: #F8774B;
+		  stroke-dasharray: none;
+		  stroke-width: 5;
+		}
+	  }
+	}
+  }
