@@ -203,7 +203,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Protocol
         /// <summary>
         /// Sets the command data, converted according to the command element type.
         /// </summary>
-        public void SetCmdData(double cmdVal)
+        public virtual void SetCmdData(double cmdVal)
         {
             bool reverse = true;
 

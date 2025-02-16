@@ -76,7 +76,7 @@ namespace Scada.Comm.Drivers.DrvModbus.View.Forms
         /// <summary>
         /// Validates the path of the device template file.
         /// </summary>
-        private bool ValidateTemplatePath(string fileName, out string shortFileName)
+        public bool ValidateTemplatePath(string fileName, out string shortFileName)
         {
             if (fileName.StartsWith(appDirs.ConfigDir))
             {
@@ -100,9 +100,20 @@ namespace Scada.Comm.Drivers.DrvModbus.View.Forms
         }
 
         /// <summary>
+        /// Sets the tempalte file name.
+        /// </summary>
+        public string TemplateFileName
+        {
+            set
+            {
+                txtTemplateFileName.Text = value;
+            }
+        }
+
+        /// <summary>
         /// Shows a form for editing the device template.
         /// </summary>
-        private void EditDeviceTemplate(string fileName = "")
+        public virtual void EditDeviceTemplate(string fileName = "")
         {
             FrmDeviceTemplate frmDeviceTemplate = new(appDirs, customUi)
             {

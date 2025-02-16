@@ -101,7 +101,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Logic
         /// <summary>
         /// Initializes an object for polling the device.
         /// </summary>
-        private void InitModbusPoll()
+        public void InitModbusPoll()
         {
             if (deviceModel != null)
             {
@@ -145,7 +145,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Logic
         /// <summary>
         /// Gets the device tag format depending on the Modbus element type.
         /// </summary>
-        private static TagFormat GetTagFormat(ElemConfig elemConfig)
+        public TagFormat GetTagFormat(ElemConfig elemConfig)
         {
             if (elemConfig.ElemType == ElemType.Bool)
                 return TagFormat.OffOn;

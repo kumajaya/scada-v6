@@ -91,7 +91,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Config
         /// <summary>
         /// Loads the configuration from the XML node.
         /// </summary>
-        public void LoadFromXml(XmlElement xmlElem)
+        public virtual void LoadFromXml(XmlElement xmlElem)
         {
             if (xmlElem == null)
                 throw new ArgumentNullException(nameof(xmlElem));
@@ -111,7 +111,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Config
         /// <summary>
         /// Saves the configuration into the XML node.
         /// </summary>
-        public void SaveToXml(XmlElement xmlElem)
+        public virtual void SaveToXml(XmlElement xmlElem)
         {
             if (xmlElem == null)
                 throw new ArgumentNullException(nameof(xmlElem));

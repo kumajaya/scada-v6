@@ -178,7 +178,7 @@ namespace Scada.Comm.Drivers.DrvModbus.Protocol
         /// <summary>
         /// Gets the element value according to its type, converted to double.
         /// </summary>
-        public double GetElemVal(int elemIdx)
+        public virtual double GetElemVal(int elemIdx)
         {
             Elem elem = Elems[elemIdx];
             byte[] elemData = ElemData[elemIdx];
