@@ -69,6 +69,7 @@ namespace Scada.Web.Plugins.PlgSchAnekaComp.Code
                 return new List<string>()
                 {
                     "SchAnekaComp/js/anekacomp-render.js",
+                    "SchAnekaComp/js/svg.min.js",
                     "SchAnekaComp/js/gauge.min.js"
                 };
             }

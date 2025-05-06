@@ -9,6 +9,8 @@
  * - modal.js
  * - scheme-common.js
  * - scheme-render.js
+ * - svg.js
+ * - gauge.js
  */
 
 /* Created with Inkscape (http://www.inkscape.org/) */
@@ -31,7 +33,7 @@ const aneka_level_svg = `
   <path fill="#323232" stroke="none" stroke-width="0" d="M0 0L24 0L24 96L0 96L0 0Z"/>
 </svg>`;
 
-const svg_shapes = "path, rect, circle, ellipse, line, polyline, polygon"
+const svg_shapes = "path, rect, circle, ellipse, line, polyline, polygon, text, textPath, tspan"
 
 /********** Extra Components Utilities **********/
 
@@ -62,47 +64,6 @@ scada.scheme.anekaCompUtils = {
     }
 };
 
-/********** Svg as background **********/
-
-/*
-scada.scheme.BasicSvgRenderer.prototype._addNameSpace = function (data) {
-    if (data.indexOf(`http://www.w3.org/2000/svg`) < 0) {
-        data = data.replace(/<svg/g, `<svg xmlns='http://www.w3.org/2000/svg'`);
-    }
-
-    return data;
-}
-
-scada.scheme.BasicSvgRenderer.prototype._encodeSVG = function (data) {
-    const symbols = /[\r\n%#()<>?[\\\]^`{|}]/g;
-
-    // Use single quotes instead of double to avoid encoding.
-    data = data.replace(/"/g, `'`);
-
-    data = data.replace(/>\s{1,}</g, `><`);
-    data = data.replace(/\s{2,}/g, ` `);
-
-    // Using encodeURIComponent() as replacement function
-    // allows to keep result code readable
-    return data.replace(symbols, encodeURIComponent);
-};
-
-// Set background image of the jQuery object, make sure a valid svg as background
-// Source: https://github.com/yoksel/url-encoder/
-
-// Optimize first with SVGO (https://jakearchibald.github.io/svgomg/) with removeViewBox disable or
-// by using https://www.svgviewer.dev/
-scada.scheme.BasicSvgRenderer.prototype.setBackgroundImage = function (jqObj, image, opt_removeIfEmpty) {
-    if (image && image.mediaType === "image/svg+xml") {
-        const namespaced = this._addNameSpace(atob(image.data));
-        const escaped = this._encodeSVG(namespaced);
-        jqObj.css("background-image", `url("data:image/svg+xml,${escaped}")`);
-    } else if (opt_removeIfEmpty) {
-        jqObj.css("background-image", "");
-    }
-};
-*/
-
 /********** Basic Renderer **********/
 
 scada.scheme.BasicRenderer = function () {
@@ -115,8 +76,9 @@ scada.scheme.BasicRenderer.constructor = scada.scheme.BasicRenderer;
 
 scada.scheme.BasicRenderer.prototype.setBackgroundImage = function (jqObj, image) {
     if (image && image.mediaType === "image/svg+xml") {
-        const svg = atob(image.data);
-        jqObj.empty().append(`${svg}`);
+        jqObj.empty();
+        const draw = SVG(jqObj[0]);
+        draw.svg(atob(image.data));
     } else {
         jqObj.empty().append(this.SVG_IMAGE);
     }
@@ -131,7 +93,28 @@ scada.scheme.BasicRenderer.prototype.createDom = function (component, renderCont
     this.setBackColor(divComp, props.backColor);
 
     var image = renderContext.getImage(props.imageName);
-    this.setBackgroundImage(divContainer, image);
+    divContainer.empty();
+    const draw = SVG(divContainer[0]);
+    draw.svg(image && image.mediaType === "image/svg+xml" ? atob(image.data) : this.SVG_IMAGE);
+
+    draw.find('*').forEach(function (element) {
+        if (element instanceof SVG.Element) {
+            var color = element.attr("fill");
+            if (color !== "none") {
+                element.css({
+                    fill: props.fillColor || "none",
+                    'fill-opacity': scada.scheme.anekaCompUtils.calcOpacity(props.fillOpacity)
+                });
+            }
+            color = element.attr("stroke");
+            if (color !== "none") {
+                element.css({
+                    stroke: props.strokeColor || "none",
+                    'stroke-opacity': scada.scheme.anekaCompUtils.calcOpacity(props.strokeOpacity)
+                });
+            }
+        }
+    });
 
     if (props.borderWidth > 0) {
         var divBorder = $("<div class='aneka-border'></div>");
@@ -158,14 +141,6 @@ scada.scheme.BasicRenderer.prototype.createDom = function (component, renderCont
             break;
     }
 
-    elem = elem.children(svg_shapes);
-    elem.css({
-        "fill": props.fillColor,
-        "fill-opacity": scada.scheme.anekaCompUtils.calcOpacity(props.fillOpacity),
-        "stroke": props.strokeColor,
-        "stroke-opacity": scada.scheme.anekaCompUtils.calcOpacity(props.strokeOpacity)
-    });
-
     component.dom = divComp;
 };
 
@@ -177,15 +152,27 @@ scada.scheme.BasicRenderer.prototype.refreshImages = function (component, render
         var divContainer = divComp.find(".aneka-container");
 
         var image = renderContext.getImage(props.imageName);
-        $.when(divContainer.empty()).then(this.setBackgroundImage(divContainer, image));
+        divContainer.empty();
+        const draw = SVG(divContainer[0]);
+        draw.svg(image && image.mediaType === "image/svg+xml" ? atob(image.data) : this.SVG_IMAGE);
 
-        var elem = divContainer.find("svg").children(svg_shapes);
-        elem.css({
-            "fill": props.fillColor,
-            "fill-opacity": scada.scheme.anekaCompUtils.calcOpacity(props.fillOpacity),
-            "stroke": props.strokeColor,
-            "stroke-opacity": scada.scheme.anekaCompUtils.calcOpacity(props.strokeOpacity),
-            "opacity": opacity
+        draw.find('*').forEach(function (element) {
+            if (element instanceof SVG.Element) {
+                var color = element.attr("fill");
+                if (color !== "none") {
+                    element.css({
+                        fill: props.fillColor || "none",
+                        'fill-opacity': scada.scheme.anekaCompUtils.calcOpacity(props.fillOpacity)
+                    });
+                }
+                color = element.attr("stroke");
+                if (color !== "none") {
+                    element.css({
+                        stroke: props.strokeColor || "none",
+                        'stroke-opacity': scada.scheme.anekaCompUtils.calcOpacity(props.strokeOpacity)
+                    });
+                }
+            }
         });
 
         // force set size
@@ -256,14 +243,24 @@ scada.scheme.LedRenderer.prototype.updateData = function (component, renderConte
             }
         }
 
-        // apply fill color
-        const elem = divComp.find(".aneka-container svg").children(svg_shapes);
-        elem.css({ "fill": fillColor });
+        // apply fill and stroke color using SVG.js
+        const draw = SVG(divComp.find(".aneka-container svg")[0]);
+        draw.find('*').forEach(function (element) {
+            if (element instanceof SVG.Element) {
+                var color = element.attr("fill");
+                if (color !== "none") {
+                    element.css({ fill: fillColor });
+                }
 
-        // set stroke color
-        if (props.strokeColor === this.STATUS_COLOR) {
-            elem.css({ "stroke": this._getStatusColor(cnlDataExt) });
-        }
+                // apply stroke color if needed
+                if (props.strokeColor === this.STATUS_COLOR) {
+                    color = element.attr("stroke");
+                    if (color !== "none") {
+                        element.css({ stroke: this._getStatusColor(cnlDataExt) });
+                    }
+                }
+            }
+        });
     }
 };
 
@@ -359,7 +356,7 @@ scada.scheme.GaugeRenderer.prototype.createDom = function (component, renderCont
     component.gauge = Gauge(divContainer[0], {
         min: props.min,
         max: props.max,
-        dialRadius: props.dialRadius,
+        dialRadius: props.dialRadius ? props.dialRadius : 40,
         dialStartAngle: props.dialStartAngle,
         dialEndAngle: props.dialEndAngle,
         value: props.max * 0.5,
