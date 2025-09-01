@@ -16,5 +16,6 @@ compile .\ScadaReport\ScadaReport.sln
 compile .\ScadaComm\OpenDrivers\OpenDrivers.sln
 compile .\ScadaComm\OpenDrivers2\OpenDrivers2.sln
 compile .\ScadaServer\OpenModules\OpenModules.sln
+compile .\ScadaWeb\Mimics\Mimics.sln
 compile .\ScadaWeb\OpenPlugins\OpenPlugins.sln
 compile .\ScadaAdmin\OpenExtensions\OpenExtensions.sln
