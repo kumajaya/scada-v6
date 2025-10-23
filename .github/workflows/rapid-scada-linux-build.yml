@@ -64,3 +64,10 @@ jobs:
             ScadaAdmin/**/bin/${{ inputs.dotnetConfiguration }}/
             ScadaAdmin/OpenExtensions/**/bin/${{ inputs.dotnetConfiguration }}/
             ScadaReport/**/bin/${{ inputs.dotnetConfiguration }}/
+
+      - name: Upload publish artifacts
+        if: ${{ inputs.dotnetCommand == 'build' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scadaadmin-publish-${{ inputs.dotnetConfiguration }}-win-x64
+          path: artifacts/ScadaAdmin/**

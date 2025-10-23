@@ -20,6 +20,11 @@ TEMP_ZIP="$TEMP_DIR/dotnet-sdk-win-$SDK_VERSION.zip"
 echo ">>> Detected SDK version: $SDK_VERSION"
 echo ">>> DOTNET_ROOT: $DOTNET_ROOT"
 
+if [ -d "$LINUX_SDK_PATH/Microsoft.NET.Sdk.WindowsDesktop" ]; then
+  echo ">>> WindowsDesktop SDK already present at $LINUX_SDK_PATH, no injection required."
+  exit 0
+fi
+
 [ -d "$LINUX_SDK_PATH" ] || { echo "Error: Linux SDK path not found: $LINUX_SDK_PATH"; exit 1; }
 command -v unzip >/dev/null || { echo "Error: unzip not found. Install it first."; exit 1; }
 
@@ -35,13 +40,9 @@ fi
 
 [ -f "$KEY_FILE" ] || { echo "Error: WindowsDesktop SDK not found after extraction."; exit 1; }
 
-if [ -d "$LINUX_SDK_PATH/Microsoft.NET.Sdk.WindowsDesktop" ]; then
-  echo ">>> WindowsDesktop SDK already present at $LINUX_SDK_PATH, skipping copy."
-else
-  echo ">>> Copying WindowsDesktop SDK into Linux SDK path (sudo required)..."
-  sudo mkdir -p "$LINUX_SDK_PATH"
-  sudo cp -r --backup=numbered "$SRC_SDK" "$LINUX_SDK_PATH/"
-  echo ">>> Injection complete."
-fi
+echo ">>> Copying WindowsDesktop SDK into Linux SDK path (sudo required)..."
+sudo mkdir -p "$LINUX_SDK_PATH"
+sudo cp -r --backup=numbered "$SRC_SDK" "$LINUX_SDK_PATH/"
+echo ">>> Injection complete."
 
 echo ">>> Success: WindowsDesktop SDK available at $LINUX_SDK_PATH/Microsoft.NET.Sdk.WindowsDesktop"
