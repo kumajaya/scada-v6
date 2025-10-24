@@ -37,3 +37,13 @@ compile ./ScadaServer/OpenModules/OpenModules.sln
 compile ./ScadaWeb/Mimics/Mimics.sln
 compile ./ScadaWeb/OpenPlugins/OpenPlugins.sln
 compile ./ScadaAdmin/OpenExtensions/OpenExtensions.sln
+
+if [ "$task" = "build" ]; then
+  echo "Publishing ScadaAdmin..."
+  dotnet publish ./ScadaAdmin/ScadaAdmin/ScadaAdmin/ScadaAdmin.csproj \
+    -c $config -r win-x64 --self-contained true \
+    -o ./artifacts/ScadaAdmin \
+    /p:PublishSingleFile=true \
+    /p:IncludeNativeLibrariesForSelfExtract=true \
+    /p:StripSymbols=true
+fi
