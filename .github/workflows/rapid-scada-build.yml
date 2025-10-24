@@ -1,0 +1,157 @@
+name: Rapid SCADA Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildTarget:
+        description: 'Choose build OS target'
+        required: true
+        default: 'linux'
+        type: choice
+        options:
+          - linux
+          - windows
+      dotnetCommand:
+        description: 'Run build or clean command?'
+        required: true
+        default: 'build'
+        type: choice
+        options:
+          - build
+          - clean
+      dotnetConfiguration:
+        description: 'Select Release or Debug configuration?'
+        required: true
+        default: 'Release'
+        type: choice
+        options:
+          - Release
+          - Debug
+
+jobs:
+  build-linux:
+    if: ${{ github.event.inputs.buildTarget == 'linux' }}
+    name: Build on Linux (.NET 8)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Check .NET environment
+        run: |
+          dotnet --info
+          dotnet --list-sdks
+
+      - name: Inject WindowsDesktop SDK into Linux
+        shell: bash
+        run: |
+          chmod +x ./Script/setup-windowsdesktop-sdk.sh
+          ./Script/setup-windowsdesktop-sdk.sh
+
+      - name: Run Bash build script
+        shell: bash
+        continue-on-error: false
+        run: |
+          chmod +x ./Script/compile.sh
+          ./Script/compile.sh -t "${{ inputs.dotnetCommand }}" -c "${{ inputs.dotnetConfiguration }}"
+
+      - name: Upload build artifacts
+        if: ${{ inputs.dotnetCommand == 'build' && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapid-scada-${{ inputs.buildTarget }}-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
+          path: |
+            ScadaCommon/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAgent/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/OpenDrivers/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/OpenDrivers2/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaServer/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaServer/OpenModules/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/Mimics/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/OpenPlugins/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAdmin/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAdmin/OpenExtensions/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaReport/**/bin/${{ inputs.dotnetConfiguration }}/
+
+      - name: Upload publish artifacts
+        if: ${{ inputs.dotnetCommand == 'build' && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scadaadmin-${{ inputs.buildTarget }}-win-x64-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
+          path: artifacts/ScadaAdmin/**
+
+  build-windows:
+    if: ${{ github.event.inputs.buildTarget == 'windows' }}
+    name: Build on Windows (.NET 8)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK 8.0
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/global.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Check .NET environment
+        run: |
+          dotnet --info
+          dotnet --list-sdks
+
+      - name: Run PowerShell build script
+        shell: pwsh
+        continue-on-error: false
+        run: |
+          ./Script/compile.ps1 -t "${{ inputs.dotnetCommand }}" -c "${{ inputs.dotnetConfiguration }}"
+
+      - name: Upload build artifacts
+        if: ${{ inputs.dotnetCommand == 'build' && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapid-scada-${{ inputs.buildTarget }}-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
+          path: |
+            ScadaCommon/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAgent/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/OpenDrivers/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaComm/OpenDrivers2/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaServer/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaServer/OpenModules/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/Mimics/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaWeb/OpenPlugins/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAdmin/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaAdmin/OpenExtensions/**/bin/${{ inputs.dotnetConfiguration }}/
+            ScadaReport/**/bin/${{ inputs.dotnetConfiguration }}/
+
+      - name: Upload publish artifacts
+        if: ${{ inputs.dotnetCommand == 'build' && success() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scadaadmin-${{ inputs.buildTarget }}-win-x64-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
+          path: artifacts/ScadaAdmin/**
