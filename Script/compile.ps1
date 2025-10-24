@@ -19,3 +19,13 @@ compile .\ScadaServer\OpenModules\OpenModules.sln
 compile .\ScadaWeb\Mimics\Mimics.sln
 compile .\ScadaWeb\OpenPlugins\OpenPlugins.sln
 compile .\ScadaAdmin\OpenExtensions\OpenExtensions.sln
+
+if ($t -eq 'build') {
+  Write-Host "Publishing ScadaAdmin..." -ForegroundColor Green
+  dotnet publish .\ScadaAdmin\ScadaAdmin\ScadaAdmin\ScadaAdmin.csproj `
+    -c $c -r win-x64 --self-contained true `
+    -o ./artifacts/ScadaAdmin `
+    /p:PublishSingleFile=true `
+    /p:IncludeNativeLibrariesForSelfExtract=true `
+    /p:StripSymbols=true
+}
