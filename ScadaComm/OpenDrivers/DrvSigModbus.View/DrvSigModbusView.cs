@@ -47,7 +47,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View
             get
             {
                 return Locale.IsRussian ?
-                    "Взаимодействует с контроллерами по протоколу Modbus.\n\n" +
+                    "Взаимодействует с контроллерами по протоколу Modbus с поддержкой масштабирования.\n\n" +
                     "Пользовательский параметр линии связи:\n" +
                     "TransMode - режим передачи данных (RTU, ASCII, TCP).\n\n" +
                     "Параметр командной строки:\n" +
@@ -55,7 +55,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View
                     "Команды ТУ:\n" +
                     "определяются шаблоном устройства." :
 
-                    "Interacts with controllers via Modbus protocol.\n\n" +
+                    "Interacts with controllers via Modbus protocol with scaling support.\n\n" +
                     "Custom communication line parameter:\n" +
                     "TransMode - data transmission mode (RTU, ASCII, TCP).\n\n" +
                     "Command line parameter:\n" +

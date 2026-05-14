@@ -32,6 +32,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             ElemType = ElemType.Undefined;
             ElemCnt = 1;
             ByteOrder = null;
+            Scaling = "";
             CmdNum = 0;
             CmdCode = "";
             Value = 0;
@@ -73,6 +74,11 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// Gets or sets the byte order.
         /// </summary>
         public int[] ByteOrder { get; set; }
+
+        /// <summary>
+        /// Gets or sets the scaling double array.
+        /// </summary>
+        public string Scaling { get; set; }
 
         /// <summary>
         /// Gets or sets the command number.
@@ -206,14 +212,30 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         public void SetCmdData(double cmdVal)
         {
             bool reverse = true;
+            double rawVal = cmdVal;
+
+            if (!string.IsNullOrWhiteSpace(Scaling))
+            {
+                double[] scaling = ModbusUtils.ParseDoubleArray(Scaling);
+                if (scaling.Length == 4 && scaling[0] != scaling[1] && scaling[2] != scaling[3])
+                {
+                    rawVal = ModbusUtils.GetScaledValue(cmdVal, scaling[2], scaling[3], scaling[0], scaling[1]);
+                    rawVal = Math.Round(rawVal, 0);
+
+                    if (ElemType == ElemType.UShort && (rawVal < 0 || rawVal > 65535))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for UShort (0-65535).");
+                    if (ElemType == ElemType.Short && (rawVal < -32768 || rawVal > 32767))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for Short (-32768-32767).");
+                }
+            }
 
             switch (ElemType)
             {
                 case ElemType.UShort:
-                    Data = BitConverter.GetBytes((ushort)cmdVal);
+                    Data = BitConverter.GetBytes((ushort)rawVal);
                     break;
                 case ElemType.Short:
-                    Data = BitConverter.GetBytes((short)cmdVal);
+                    Data = BitConverter.GetBytes((short)rawVal);
                     break;
                 case ElemType.UInt:
                     Data = BitConverter.GetBytes((uint)cmdVal);

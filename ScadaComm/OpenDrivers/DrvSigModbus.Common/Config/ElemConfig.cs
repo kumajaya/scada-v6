@@ -22,6 +22,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
             ByteOrder = "";
             ReadOnly = false;
             IsBitMask = false;
+            Scaling = "";
         }
 
 
@@ -54,6 +55,11 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// Gets or sets a value indicating whether the element represents a bit mask.
         /// </summary>
         public bool IsBitMask { get; set; }
+
+        /// <summary>
+        /// Gets or sets the scaling double array.
+        /// </summary>
+        public string Scaling { get; set; }
 
         /// <summary>
         /// Gets the quantity of addresses.
