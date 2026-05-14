@@ -5,6 +5,7 @@ using Scada.Comm.Drivers.DrvSigModbus.Config;
 using Scada.Comm.Drivers.DrvSigModbus.Protocol;
 using Scada.Forms;
 using System.ComponentModel;
+using System.Drawing;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 {
@@ -106,6 +107,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             numCmdAddress.Hexadecimal = !DecAddr;
             ShowFuncCode(cmd);
             ShowByteOrder(cmd);
+            ShowScaling(cmd);
 
             if (cmd == null)
             {
@@ -199,6 +201,23 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
         }
 
         /// <summary>
+        /// Shows the scaling of the command.
+        /// </summary>
+        private void ShowScaling(CmdConfig cmd)
+        {
+            if (cmd != null && cmd.ScalingEnabled)
+            {
+                txtCmdScaling.Text = cmd.Scaling;
+                txtCmdScaling.Enabled = true;
+            }
+            else
+            {
+                txtCmdScaling.Text = "";
+                txtCmdScaling.Enabled = false;
+            }
+        }
+
+        /// <summary>
         /// Raises an ObjectChanged event.
         /// </summary>
         private void OnObjectChanged(object changeArgument)
@@ -271,6 +290,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
                 ShowFuncCode(cmd);
                 ShowByteOrder(cmd);
+                ShowScaling(cmd);
                 OnObjectChanged(TreeUpdateTypes.CurrentNode);
 
                 if (cmd.DataBlock == DataBlock.Custom)
@@ -299,6 +319,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 cmd.Multiple = chkCmdMultiple.Checked;
                 ShowFuncCode(cmd);
                 ShowByteOrder(cmd);
+                ShowScaling(cmd);
                 OnObjectChanged(TreeUpdateTypes.None);
 
                 cbCmdElemType.SelectedIndex = (int)cmd.DefaultElemType;
@@ -377,6 +398,46 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             if (cmd != null)
             {
                 cmd.ByteOrder = txtCmdByteOrder.Text;
+                OnObjectChanged(TreeUpdateTypes.None);
+            }
+        }
+
+        private void txtCmdScaling_TextChanged(object sender, EventArgs e)
+        {
+            if (cmd != null)
+            {
+                string scalingText = txtCmdScaling.Text.Trim();
+
+                if (string.IsNullOrEmpty(scalingText))
+                {
+                    cmd.Scaling = "";
+                    txtCmdScaling.BackColor = SystemColors.Window;
+                }
+                else
+                {
+                    try
+                    {
+                        double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
+                        if (scaling.Length != 4)
+                        {
+                            txtCmdScaling.BackColor = Color.LightCoral;
+                        }
+                        else if (scaling[0] == scaling[1] || scaling[2] == scaling[3])
+                        {
+                            txtCmdScaling.BackColor = Color.LightCoral;
+                        }
+                        else
+                        {
+                            cmd.Scaling = scalingText;
+                            txtCmdScaling.BackColor = SystemColors.Window;
+                        }
+                    }
+                    catch
+                    {
+                        txtCmdScaling.BackColor = Color.LightCoral;
+                    }
+                }
+
                 OnObjectChanged(TreeUpdateTypes.None);
             }
         }

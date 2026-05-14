@@ -5,6 +5,7 @@ using Scada.Comm.Drivers.DrvSigModbus.Config;
 using Scada.Comm.Drivers.DrvSigModbus.Protocol;
 using Scada.Forms;
 using System.ComponentModel;
+using System.Drawing;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 {
@@ -61,6 +62,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 txtElemByteOrder.Text = "";
                 chkElemReadOnly.Checked = false;
                 chkElemIsBitMask.Checked = false;
+                txtElemScaling.Text = "";
                 gbElem.Enabled = false;
             }
             else
@@ -124,6 +126,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 chkElemReadOnly.Enabled = elemGroup.ReadOnlyEnabled;
                 chkElemIsBitMask.Checked = elem.IsBitMask;
                 chkElemIsBitMask.Enabled = elemGroup.BitMaskEnabled;
+                txtElemScaling.Text = elem.Scaling;
+                txtElemScaling.Enabled = elemGroup.ScalingEnabled &&
+                        (elem.ElemType == ElemType.UShort || elem.ElemType == ElemType.Short);
                 gbElem.Enabled = true;
             }
         }
@@ -205,6 +210,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
                 elemTag.Elem.ElemType = elemType;
                 txtElemAddress.Text = elemTag.AddressRange;
+                txtElemScaling.Text = elemTag.Elem.Scaling;
+                txtElemScaling.Enabled = elemTag.ElemGroup.ScalingEnabled &&
+                        (elemType == ElemType.UShort || elemType == ElemType.Short);
                 OnObjectChanged(TreeUpdateTypes.CurrentNode | TreeUpdateTypes.NextSiblings);
             }
         }
@@ -235,6 +243,46 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             if (elemTag != null)
             {
                 elemTag.Elem.IsBitMask = chkElemIsBitMask.Checked;
+                OnObjectChanged(TreeUpdateTypes.None);
+            }
+        }
+
+        private void txtScaling_TextChanged(object sender, EventArgs e)
+        {
+            if (elemTag != null)
+            {
+                string scalingText = txtElemScaling.Text.Trim();
+
+                if (string.IsNullOrEmpty(scalingText))
+                {
+                    elemTag.Elem.Scaling = "";
+                    txtElemScaling.BackColor = SystemColors.Window;
+                }
+                else
+                {
+                    try
+                    {
+                        double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
+                        if (scaling.Length != 4)
+                        {
+                            txtElemScaling.BackColor = Color.LightCoral;
+                        }
+                        else if (scaling[0] == scaling[1] || scaling[2] == scaling[3])
+                        {
+                            txtElemScaling.BackColor = Color.LightCoral;
+                        }
+                        else
+                        {
+                            elemTag.Elem.Scaling = scalingText;
+                            txtElemScaling.BackColor = SystemColors.Window;
+                        }
+                    }
+                    catch
+                    {
+                        txtElemScaling.BackColor = Color.LightCoral;
+                    }
+                }
+
                 OnObjectChanged(TreeUpdateTypes.None);
             }
         }
