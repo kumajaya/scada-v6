@@ -106,6 +106,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrvEnronModbus.View", "DrvE
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "DrvEnronModbus.Shared", "DrvEnronModbus.Shared\DrvEnronModbus.Shared.shproj", "{A51DE707-414B-4F30-8086-5A82A97D1A2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrvSigModbus.Common", "DrvSigModbus.Common\DrvSigModbus.Common.csproj", "{2408C181-7DC1-46E8-A22C-2457FE809A10}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrvSigModbus.Logic", "DrvSigModbus.Logic\DrvSigModbus.Logic.csproj", "{D5D9393A-1FAC-4A1B-8159-660CE70559C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrvSigModbus.View", "DrvSigModbus.View\DrvSigModbus.View.csproj", "{24176C90-4191-424E-9464-53722BA9ABC3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -236,6 +242,18 @@ Global
 		{F19D06C6-C82C-4F06-8477-1954D25278FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F19D06C6-C82C-4F06-8477-1954D25278FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F19D06C6-C82C-4F06-8477-1954D25278FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2408C181-7DC1-46E8-A22C-2457FE809A10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2408C181-7DC1-46E8-A22C-2457FE809A10}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2408C181-7DC1-46E8-A22C-2457FE809A10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2408C181-7DC1-46E8-A22C-2457FE809A10}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5D9393A-1FAC-4A1B-8159-660CE70559C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D9393A-1FAC-4A1B-8159-660CE70559C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D9393A-1FAC-4A1B-8159-660CE70559C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D9393A-1FAC-4A1B-8159-660CE70559C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24176C90-4191-424E-9464-53722BA9ABC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24176C90-4191-424E-9464-53722BA9ABC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24176C90-4191-424E-9464-53722BA9ABC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24176C90-4191-424E-9464-53722BA9ABC3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
