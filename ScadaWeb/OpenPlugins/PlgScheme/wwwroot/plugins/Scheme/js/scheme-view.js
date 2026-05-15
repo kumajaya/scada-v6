@@ -50,13 +50,12 @@ scada.scheme.env = {
 
 // Get or create the tooltip instance
 function initTooltips() {
-    if (scheme.dom) {
-        $("[data-bs-toggle='tooltip']").each(function () {
-            var tooltip = bootstrap.Tooltip.getOrCreateInstance($(this)[0]);
-            // do something
+    if (scheme.dom && typeof bootstrap !== "undefined") {
+        scheme.dom.find("[data-bs-toggle='tooltip']").each(function () {
+            bootstrap.Tooltip.getOrCreateInstance(this);
         });
     }
-};
+}
 
 // Load the scheme
 function loadScheme(viewID) {
