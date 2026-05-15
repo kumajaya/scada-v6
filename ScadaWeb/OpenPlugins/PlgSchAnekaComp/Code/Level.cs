@@ -61,6 +61,13 @@ namespace Scada.Web.Plugins.PlgSchAnekaComp.Code
         #endregion
         public int Maximum { get; set; }
 
+        #region Attributes
+        [DisplayName("Fill direction"), Category(Categories.Appearance)]
+        [Description("The property that can be used to select the fill direction.")]
+        [DefaultValue(DirectionTypes.Default)]
+        #endregion
+        public DirectionTypes DirectionType { get; set; }
+
         /// <summary>
         /// Получить или установить действие.
         /// </summary>
@@ -128,6 +135,7 @@ namespace Scada.Web.Plugins.PlgSchAnekaComp.Code
             CtrlCnlNum = xmlNode.GetChildAsInt("CtrlCnlNum");
             Minimum = xmlNode.GetChildAsInt("Minimum");
             Maximum = xmlNode.GetChildAsInt("Maximum");
+            DirectionType = xmlNode.GetChildAsEnum<DirectionTypes>("DirectionType");
         }
 
         /// <summary>
@@ -150,6 +158,7 @@ namespace Scada.Web.Plugins.PlgSchAnekaComp.Code
             xmlElem.AppendElem("CtrlCnlNum", CtrlCnlNum);
             xmlElem.AppendElem("Minimum", Minimum);
             xmlElem.AppendElem("Maximum", Maximum);
+            xmlElem.AppendElem("DirectionType", DirectionType);
         }
 
         /// <summary>
