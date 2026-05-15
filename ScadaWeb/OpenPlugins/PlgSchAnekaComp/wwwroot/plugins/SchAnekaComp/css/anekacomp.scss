@@ -1,207 +1,266 @@
-﻿/* Aneka */
+﻿// =============================================================================
+// Aneka Components Stylesheet
+//
+// Author   : Ketut Kumajaya
+// Created  : 2022
+// Refactored: 2025
+//
+// Structure:
+//   1. Variables
+//   2. Aneka base
+//   3. Gauge base
+//   4. Gauge style variants (two – seven)
+// =============================================================================
+
+
+// -----------------------------------------------------------------------------
+// 1. Variables
+// -----------------------------------------------------------------------------
+
+// Shared
+$border-radius-base: 4px;
+$border-radius-gauge: 3px;
+$font-mono: monospace;
+$font-sans: sans-serif;
+
+// Gauge — dial / track colors
+$gauge-dial-color: #334455;
+$gauge-dial-fill: rgba(0, 0, 0, 0);
+
+// Gauge — value colors per variant
+$gauge-value-default: #2fe3ff;
+$gauge-value-two: orange;
+$gauge-value-three: #C9DE3C;
+$gauge-value-four: #F32450;
+$gauge-value-five: #F8774B;
+$gauge-value-six: #FF6DAF;
+$gauge-value-seven: #F8774B;
+
+// Gauge — stroke widths per variant
+$gauge-dial-width-default: 2;
+$gauge-dial-width-two: 10;
+$gauge-dial-width-three: 2;
+$gauge-dial-width-four: 10;
+$gauge-dial-width-five: 5;
+$gauge-dial-width-six: 20;
+$gauge-dial-width-seven: 5;
+
+$gauge-value-width-default: 2;
+$gauge-value-width-two: 13;
+$gauge-value-width-three: 5;
+$gauge-value-width-four: 10;
+$gauge-value-width-five: 5;
+$gauge-value-width-six: 20;
+$gauge-value-width-seven: 5;
+
+
+// -----------------------------------------------------------------------------
+// 2. Aneka base
+// -----------------------------------------------------------------------------
+
 .aneka {
 	&.undef {
-	  visibility: hidden;
+		visibility: hidden;
 	}
-  }
+}
 
-  .aneka-border {
+.aneka-border {
 	width: 100%;
 	height: 100%;
 	box-sizing: border-box;
-	border-radius: 4px;
-  }
+	border-radius: $border-radius-base;
+}
 
-  .aneka-container {
+.aneka-container {
 	width: 100%;
 	height: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-  }
+}
 
-  /* SVG Gauge */
-  /* ------ Default Style ---------- */
-  .gauge-container {
+
+// -----------------------------------------------------------------------------
+// 3. Gauge base
+// -----------------------------------------------------------------------------
+
+.gauge-container {
 	width: 100%;
 	height: 100%;
 	display: block;
 	float: left;
-	/* padding: 10px;
-	background-color: #222;
-	margin: 7px; */
-	border-radius: 3px;
+	border-radius: $border-radius-gauge;
 	position: relative;
 
-	> .label {
-	  position: absolute;
-	  right: 0;
-	  top: 0;
-	  display: inline-block;
-	  background: rgba(0, 0, 0, 0.5);
-	  font-family: monospace;
-	  font-size: 0.8em;
-	  padding: 5px 10px;
+	// Label overlay (top-right badge)
+	>.label {
+		position: absolute;
+		right: 0;
+		top: 0;
+		display: inline-block;
+		background: rgba(0, 0, 0, 0.5);
+		font-family: $font-mono;
+		font-size: 0.8em;
+		padding: 5px 10px;
 	}
 
-	> .gauge {
-	  .dial {
-		stroke: #334455;
-		stroke-width: 2;
-		fill: rgba(0, 0, 0, 0);
-	  }
+	// SVG dial track
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		stroke-width: $gauge-dial-width-default;
+		fill: $gauge-dial-fill;
+	}
 
-	  .value {
-		stroke: #2fe3ff;
-		stroke-width: 2;
-		fill: rgba(0, 0, 0, 0);
-	  }
+	// SVG value arc
+	>.gauge .value {
+		stroke: $gauge-value-default;
+		stroke-width: $gauge-value-width-default;
+		fill: $gauge-dial-fill;
+	}
 
-	  .value-text {
-		fill: #2fe3ff;
-		font-family: sans-serif;
+	// Value text inside SVG
+	>.gauge .value-text {
+		fill: $gauge-value-default;
+		font-family: $font-sans;
 		font-weight: bold;
 		font-size: 0.8em;
-	  }
 	}
-  }
+}
 
-  /* ------- Alternate Style ------- */
-  .wrapper {
+// Wrapper helper (used when stacking multiple gauges)
+.wrapper {
 	height: 100px;
 	float: left;
 	margin: 7px;
 	overflow: hidden;
 
-	> .gauge-container {
-	  margin: 0;
+	>.gauge-container {
+		margin: 0;
 	}
-  }
+}
 
-  .gauge-container {
-	&.two {
-	  > .gauge {
-		.dial {
-		  stroke: #334455;
-		  stroke-width: 10;
-		}
 
-		.value {
-		  stroke: orange;
-		  stroke-dasharray: none;
-		  stroke-width: 13;
-		}
+// -----------------------------------------------------------------------------
+// 4. Gauge style variants
+// -----------------------------------------------------------------------------
 
-		.value-text {
-		  fill: #ccc;
-		  font-weight: 100;
-		  font-size: 1em;
-		}
-	  }
+// --- Variant: two ---
+.gauge-container.two {
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		stroke-width: $gauge-dial-width-two;
 	}
 
-	&.three {
-	  > .gauge {
-		.dial {
-		  stroke: #334455;
-		  stroke-width: 2;
-		}
-
-		.value {
-		  stroke: #C9DE3C;
-		  stroke-width: 5;
-		}
-
-		.value-text {
-		  fill: #C9DE3C;
-		}
-	  }
+	>.gauge .value {
+		stroke: $gauge-value-two;
+		stroke-dasharray: none;
+		stroke-width: $gauge-value-width-two;
 	}
 
-	&.four {
-	  > .gauge {
-		.dial {
-		  stroke: #334455;
-		  stroke-width: 10;
-		}
+	>.gauge .value-text {
+		fill: #ccc;
+		font-weight: 100;
+		font-size: 1em;
+	}
+}
 
-		.value {
-		  stroke: #F32450;
-		  stroke-dasharray: none;
-		  stroke-width: 10;
-		}
+// --- Variant: three ---
+.gauge-container.three {
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		stroke-width: $gauge-dial-width-three;
+	}
 
-		.value-text {
-		  fill: #F32450;
-		  transform: translate3d(26%, 20%, 0);
-		  display: inline-block;
-		}
-	  }
+	>.gauge .value {
+		stroke: $gauge-value-three;
+		stroke-width: $gauge-value-width-three;
+	}
 
-	  .value-text {
-		color: #F32450;
+	>.gauge .value-text {
+		fill: $gauge-value-three;
+	}
+}
+
+// --- Variant: four ---
+.gauge-container.four {
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		stroke-width: $gauge-dial-width-four;
+	}
+
+	>.gauge .value {
+		stroke: $gauge-value-four;
+		stroke-dasharray: none;
+		stroke-width: $gauge-value-width-four;
+	}
+
+	>.gauge .value-text {
+		fill: $gauge-value-four;
+		transform: translate3d(26%, 20%, 0);
+		display: inline-block;
+	}
+
+	// Alternate positioned value-text (outside SVG)
+	.value-text {
+		color: $gauge-value-four;
 		font-weight: 100;
 		position: absolute;
 		bottom: 18%;
 		right: 10%;
 		display: inline-block;
-	  }
+	}
+}
+
+// --- Variant: five ---
+.gauge-container.five {
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		stroke-width: $gauge-dial-width-five;
 	}
 
-	&.five {
-	  > .gauge {
-		.dial {
-		  stroke: #334455;
-		  stroke-width: 5;
-		}
-
-		.value {
-		  stroke: #F8774B;
-		  stroke-dasharray: 25 1;
-		  stroke-width: 5;
-		}
-
-		.value-text {
-		  fill: #F8774B;
-		  font-size: 0.7em;
-		}
-	  }
+	>.gauge .value {
+		stroke: $gauge-value-five;
+		stroke-dasharray: 25 1;
+		stroke-width: $gauge-value-width-five;
 	}
 
-	&.six {
-	  > .gauge {
-		.dial {
-		  stroke: #334455;
-		  fill: "#334455";
-		  stroke-width: 20;
-		}
+	>.gauge .value-text {
+		fill: $gauge-value-five;
+		font-size: 0.7em;
+	}
+}
 
-		.value {
-		  stroke: #FF6DAF;
-		  stroke-width: 20;
-		}
-
-		.value-text {
-		  fill: #FF6DAF;
-		  font-size: 0.7em;
-		}
-	  }
+// --- Variant: six ---
+.gauge-container.six {
+	>.gauge .dial {
+		stroke: $gauge-dial-color;
+		fill: $gauge-dial-color; // Fixed: was fill: "#334455" (quoted string — invalid CSS)
+		stroke-width: $gauge-dial-width-six;
 	}
 
-	&.seven {
-	  > .gauge {
-		.dial {
-		  stroke: transparent;
-		  stroke-width: 5;
-		  transform: scale(0.9, 0.9) translate3d(5.5px, 5.5px, 0);
-		  fill: rgba(148, 112, 57, 0.42);
-		}
-
-		.value {
-		  stroke: #F8774B;
-		  stroke-dasharray: none;
-		  stroke-width: 5;
-		}
-	  }
+	>.gauge .value {
+		stroke: $gauge-value-six;
+		stroke-width: $gauge-value-width-six;
 	}
-  }
+
+	>.gauge .value-text {
+		fill: $gauge-value-six;
+		font-size: 0.7em;
+	}
+}
+
+// --- Variant: seven ---
+.gauge-container.seven {
+	>.gauge .dial {
+		stroke: transparent;
+		stroke-width: $gauge-dial-width-seven;
+		transform: scale(0.9, 0.9) translate3d(5.5px, 5.5px, 0);
+		fill: rgba(148, 112, 57, 0.42);
+	}
+
+	>.gauge .value {
+		stroke: $gauge-value-seven;
+		stroke-dasharray: none;
+		stroke-width: $gauge-value-width-seven;
+	}
+}
