@@ -38,12 +38,6 @@
   border-radius: 6px;
 }
 
-.tooltip-inner {
-  text-align: left;
-  max-width: none;
-  white-space: nowrap;
-}
-
 body {
   margin: 0;
   padding: 0;
@@ -122,6 +116,13 @@ body {
   display: none; /*inline-block*/
   font-size: 12px;
   vertical-align: top;
+}
+
+/* Tooltip */
+.tooltip-inner {
+    text-align: left;
+    max-width: none;
+    white-space: nowrap;
 }
 
 /* Scheme */
