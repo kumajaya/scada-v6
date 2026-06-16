@@ -146,8 +146,12 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
                 if (ScalingEnabled && !string.IsNullOrWhiteSpace(Scaling))
                 {
                     double[] scaling = ModbusUtils.ParseDoubleArray(Scaling);
-                    if (scaling.Length == 4 && scaling[0] != scaling[1] && scaling[2] != scaling[3])
+                    if (scaling.Length == 4 &&
+                        Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
+                        Math.Abs(scaling[3] - scaling[2]) > 1e-9)
+                    {
                         xmlElem.SetAttribute("scaling", Scaling);
+                    }
                 }
             }
 

@@ -249,42 +249,32 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
         private void txtScaling_TextChanged(object sender, EventArgs e)
         {
-            if (elemTag != null)
+            if (elemTag == null) return;
+            string scalingText = txtElemScaling.Text.Trim();
+            if (string.IsNullOrEmpty(scalingText))
             {
-                string scalingText = txtElemScaling.Text.Trim();
-
-                if (string.IsNullOrEmpty(scalingText))
-                {
-                    elemTag.Elem.Scaling = "";
-                    txtElemScaling.BackColor = SystemColors.Window;
-                }
-                else
-                {
-                    try
-                    {
-                        double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
-                        if (scaling.Length != 4)
-                        {
-                            txtElemScaling.BackColor = Color.LightCoral;
-                        }
-                        else if (scaling[0] == scaling[1] || scaling[2] == scaling[3])
-                        {
-                            txtElemScaling.BackColor = Color.LightCoral;
-                        }
-                        else
-                        {
-                            elemTag.Elem.Scaling = scalingText;
-                            txtElemScaling.BackColor = SystemColors.Window;
-                        }
-                    }
-                    catch
-                    {
-                        txtElemScaling.BackColor = Color.LightCoral;
-                    }
-                }
-
-                OnObjectChanged(TreeUpdateTypes.None);
+                elemTag.Elem.Scaling = "";
+                txtElemScaling.BackColor = SystemColors.Window;
             }
+            else
+            {
+                try
+                {
+                    double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
+                    if (scaling.Length != 4 || Math.Abs(scaling[0] - scaling[1]) < 1e-9 || Math.Abs(scaling[2] - scaling[3]) < 1e-9)
+                        txtElemScaling.BackColor = Color.LightCoral;
+                    else
+                    {
+                        elemTag.Elem.Scaling = scalingText;
+                        txtElemScaling.BackColor = SystemColors.Window;
+                    }
+                }
+                catch
+                {
+                    txtElemScaling.BackColor = Color.LightCoral;
+                }
+            }
+            OnObjectChanged(TreeUpdateTypes.None);
         }
     }
 }
