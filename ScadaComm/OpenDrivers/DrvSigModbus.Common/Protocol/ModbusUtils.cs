@@ -355,7 +355,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
 
                 for (int i = 0; i < len; i++)
                 {
-                    arr[i] = double.Parse(elems[i]);
+                    arr[i] = double.Parse(elems[i], CultureInfo.InvariantCulture);
                 }
 
                 return arr;
@@ -371,11 +371,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// </summary>
         public static double GetScaledValue(double value, double min1, double max1, double min2, double max2)
         {
-            if (min1 == max1)
-                throw new ArgumentException("The original range must have different minimum and maximum values.");
-
-            if (min2 == max2)
-                throw new ArgumentException("The new range must have different minimum and maximum values.");
+            if (Math.Abs(max1 - min1) < 1e-9 || Math.Abs(max2 - min2) < 1e-9)
+                return min2;
 
             return (value - min1) / (max1 - min1) * (max2 - min2) + min2;
         }

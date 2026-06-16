@@ -227,8 +227,11 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             if (!string.IsNullOrWhiteSpace(elem.Scaling))
             {
                 double[] scaling = ModbusUtils.ParseDoubleArray(elem.Scaling);
-                if (scaling.Length == 4 && scaling[0] != scaling[1] && scaling[2] != scaling[3])
+                if (scaling.Length == 4 && Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
+                    Math.Abs(scaling[3] - scaling[2]) > 1e-9)
+                {
                     return ModbusUtils.GetScaledValue(elemValue, scaling[0], scaling[1], scaling[2], scaling[3]);
+                }
             }
 
             // Return the original value

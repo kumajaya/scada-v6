@@ -404,42 +404,32 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
         private void txtCmdScaling_TextChanged(object sender, EventArgs e)
         {
-            if (cmd != null)
+            if (cmd == null) return;
+            string scalingText = txtCmdScaling.Text.Trim();
+            if (string.IsNullOrEmpty(scalingText))
             {
-                string scalingText = txtCmdScaling.Text.Trim();
-
-                if (string.IsNullOrEmpty(scalingText))
-                {
-                    cmd.Scaling = "";
-                    txtCmdScaling.BackColor = SystemColors.Window;
-                }
-                else
-                {
-                    try
-                    {
-                        double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
-                        if (scaling.Length != 4)
-                        {
-                            txtCmdScaling.BackColor = Color.LightCoral;
-                        }
-                        else if (scaling[0] == scaling[1] || scaling[2] == scaling[3])
-                        {
-                            txtCmdScaling.BackColor = Color.LightCoral;
-                        }
-                        else
-                        {
-                            cmd.Scaling = scalingText;
-                            txtCmdScaling.BackColor = SystemColors.Window;
-                        }
-                    }
-                    catch
-                    {
-                        txtCmdScaling.BackColor = Color.LightCoral;
-                    }
-                }
-
-                OnObjectChanged(TreeUpdateTypes.None);
+                cmd.Scaling = "";
+                txtCmdScaling.BackColor = SystemColors.Window;
             }
+            else
+            {
+                try
+                {
+                    double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
+                    if (scaling.Length != 4 || Math.Abs(scaling[0] - scaling[1]) < 1e-9 || Math.Abs(scaling[2] - scaling[3]) < 1e-9)
+                        txtCmdScaling.BackColor = Color.LightCoral;
+                    else
+                    {
+                        cmd.Scaling = scalingText;
+                        txtCmdScaling.BackColor = SystemColors.Window;
+                    }
+                }
+                catch
+                {
+                    txtCmdScaling.BackColor = Color.LightCoral;
+                }
+            }
+            OnObjectChanged(TreeUpdateTypes.None);
         }
     }
 }
