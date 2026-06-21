@@ -14,6 +14,8 @@
  * - gauge.js
  */
 
+'use strict';
+
 /* Created with Inkscape (http://www.inkscape.org/) */
 /* Optimized with SVGO (https://jakearchibald.github.io/svgomg/) with removeViewBox disable */
 const aneka_basic_svg = `
@@ -98,6 +100,82 @@ scada.scheme.ComponentRenderer.prototype._applyImageStretch = function (elem, im
     }
 };
 
+/********** Shared LED Color Application **********/
+
+/**
+ * Apply LED fill and stroke colors based on channel data and conditions.
+ * Uses cached colorable elements if available, otherwise queries and caches.
+ */
+function applyLedColors(component, renderContext, draw) {
+    var props = component.props;
+    if (props.inCnlNum <= 0) return;
+
+    var cnlDataExt = renderContext.getCnlDataExt(props.inCnlNum);
+    var fillColor = props.fillColor;
+
+    // Resolve fill color from channel status
+    if (fillColor === scada.scheme.ComponentRenderer.STATUS_COLOR) {
+        fillColor = scada.scheme.ComponentRenderer.prototype._getStatusColor(cnlDataExt);
+    }
+
+    // Resolve fill color from conditions
+    if (cnlDataExt.d.stat > 0 && props.conditions) {
+        var cnlVal = props.maximum ? 100.0 * cnlDataExt.d.val / props.maximum : cnlDataExt.d.val;
+        for (var cond of props.conditions) {
+            if (scada.scheme.calc.conditionSatisfied(cond, cnlVal)) {
+                fillColor = cond.color;
+                break;
+            }
+        }
+    }
+
+    // Resolve stroke color
+    var strokeColor = props.strokeColor === scada.scheme.ComponentRenderer.STATUS_COLOR
+        ? scada.scheme.ComponentRenderer.prototype._getStatusColor(cnlDataExt)
+        : null;
+
+    // Use cached or newly cached colorable elements
+    var colorableElements = component._colorableElements;
+    if (!colorableElements) {
+        // Cache the elements that have visible fill or stroke (based on original attributes)
+        var allElements = draw.find(svg_shapes);
+        colorableElements = [];
+        allElements.forEach(function (el) {
+            var hasVisibleFill = false;
+            var hasVisibleStroke = false;
+            // Check fill attribute
+            var fillAttr = el.attr('fill');
+            if (fillAttr !== undefined && fillAttr !== 'none' && fillAttr !== 'transparent') {
+                hasVisibleFill = true;
+            }
+            var strokeAttr = el.attr('stroke');
+            if (strokeAttr !== undefined && strokeAttr !== 'none' && strokeAttr !== 'transparent') {
+                hasVisibleStroke = true;
+            }
+            if (hasVisibleFill || hasVisibleStroke) {
+                colorableElements.push(el);
+            }
+        });
+        component._colorableElements = colorableElements;
+    }
+
+    // Apply colors via inline style
+    colorableElements.forEach(function (el) {
+        if (!(el instanceof SVG.Element)) return;
+        // Only apply fill if the element originally had a visible fill
+        var fillAttr = el.attr('fill');
+        if (fillAttr !== undefined && fillAttr !== 'none' && fillAttr !== 'transparent') {
+            el.css({ fill: fillColor });
+        }
+        if (strokeColor) {
+            var strokeAttr = el.attr('stroke');
+            if (strokeAttr !== undefined && strokeAttr !== 'none' && strokeAttr !== 'transparent') {
+                el.css({ stroke: strokeColor });
+            }
+        }
+    });
+}
+
 /********** Basic Renderer **********/
 
 scada.scheme.BasicRenderer = function () {
@@ -110,18 +188,13 @@ scada.scheme.BasicRenderer.constructor = scada.scheme.BasicRenderer;
 
 /**
  * Robustly read a style property from an SVG element.
- *
- * SVG from Inkscape uses inline style ("style" attribute), e.g.:
- *   style="fill:#f0f;fill-opacity:1;stroke:none"
- * SVG from other tools may use presentational attributes, e.g.:
- *   fill="#f0f" stroke="none"
- *
- * element.css() reads computed/inline style first.
- * element.attr() reads presentational attribute as fallback.
- * Together they cover both cases robustly.
+ * First checks the presentational attribute (source of truth for "none"/transparency),
+ * then falls back to computed style.
  */
 scada.scheme.BasicRenderer.prototype._getSvgValue = function (element, prop) {
-    return element.css(prop) || element.attr(prop);
+    var attrVal = element.attr(prop);
+    // If attribute exists (including empty string), use it; otherwise use computed style
+    return attrVal !== undefined ? attrVal : element.css(prop);
 };
 
 /**
@@ -134,40 +207,57 @@ scada.scheme.BasicRenderer.prototype._isSvgValueVisible = function (val) {
 
 /**
  * Apply fill and stroke colors from props to all shape elements inside a draw instance.
- *
- * Writes via .css() (inline style) to reliably override both:
- * - Inkscape SVGs that use inline style (style="fill:...")
- * - SVGs that use presentational attributes (fill="...")
- *
- * Only targets actual shape elements via svg_shapes selector —
- * excludes <defs>, <title>, gradient nodes, etc.
+ * Only targets actual shape elements via svg_shapes selector.
+ * Uses cached colorable elements to improve performance on subsequent updates.
  */
 scada.scheme.BasicRenderer.prototype._applySvgColors = function (draw, props) {
     var calcOpacity = scada.scheme.anekaCompUtils.calcOpacity;
-    draw.find(svg_shapes).forEach((element) => {
-        if (!(element instanceof SVG.Element)) return;
-        if (this._isSvgValueVisible(this._getSvgValue(element, "fill"))) {
-            element.css({
+    var colorableElements = draw.find(svg_shapes).filter(function (el) {
+        // Only select elements that have a visible fill or stroke attribute originally
+        var fillAttr = el.attr('fill');
+        var strokeAttr = el.attr('stroke');
+        return (fillAttr !== undefined && fillAttr !== 'none' && fillAttr !== 'transparent') ||
+               (strokeAttr !== undefined && strokeAttr !== 'none' && strokeAttr !== 'transparent');
+    });
+
+    colorableElements.forEach(function (el) {
+        if (!(el instanceof SVG.Element)) return;
+        var fillAttr = el.attr('fill');
+        if (fillAttr !== undefined && fillAttr !== 'none' && fillAttr !== 'transparent') {
+            el.css({
                 fill: props.fillColor || "none",
                 'fill-opacity': calcOpacity(props.fillOpacity)
             });
         }
-        if (this._isSvgValueVisible(this._getSvgValue(element, "stroke"))) {
-            element.css({
+        var strokeAttr = el.attr('stroke');
+        if (strokeAttr !== undefined && strokeAttr !== 'none' && strokeAttr !== 'transparent') {
+            el.css({
                 stroke: props.strokeColor || "none",
                 'stroke-opacity': calcOpacity(props.strokeOpacity)
             });
         }
     });
+
+    // Store these elements for later updates (LED/Level)
+    return colorableElements;
 };
 
 /**
  * Render SVG content into a container element, returning the SVG.js draw instance.
+ * Handles Base64 decoding errors gracefully.
  */
 scada.scheme.BasicRenderer.prototype._renderSvg = function (container, image) {
     container.empty();
     const draw = SVG(container[0]);
-    draw.svg(image && image.mediaType === "image/svg+xml" ? atob(image.data) : this.SVG_IMAGE);
+    var svgContent = this.SVG_IMAGE;
+    if (image && image.mediaType === "image/svg+xml") {
+        try {
+            svgContent = atob(image.data);
+        } catch (e) {
+            console.warn('Failed to decode SVG image data, using default SVG:', e);
+        }
+    }
+    draw.svg(svgContent);
     return draw;
 };
 
@@ -181,8 +271,8 @@ scada.scheme.BasicRenderer.prototype.createDom = function (component, renderCont
 
     var image = renderContext.getImage(props.imageName);
     var draw = this._renderSvg(divContainer, image);
-    this._applySvgColors(draw, props);
-
+    // Cache colorable elements for later use
+    component._colorableElements = this._applySvgColors(draw, props);
     // Cache draw instance to avoid re-constructing on each update
     component._svgDraw = draw;
 
@@ -200,9 +290,7 @@ scada.scheme.BasicRenderer.prototype.refreshImages = function (component, render
     var divContainer = component.dom.find(".aneka-container");
     var image = renderContext.getImage(props.imageName);
     var draw = this._renderSvg(divContainer, image);
-    this._applySvgColors(draw, props);
-
-    // Update cached draw instance
+    component._colorableElements = this._applySvgColors(draw, props);
     component._svgDraw = draw;
 
     // Force re-apply size
@@ -233,49 +321,8 @@ scada.scheme.LedRenderer.prototype.createDom = function (component, renderContex
 };
 
 scada.scheme.LedRenderer.prototype.updateData = function (component, renderContext) {
-    var props = component.props;
-    if (props.inCnlNum <= 0) return;
-
-    var cnlDataExt = renderContext.getCnlDataExt(props.inCnlNum);
-    var fillColor = props.fillColor;
-
-    // Resolve fill color from channel status
-    if (fillColor === this.STATUS_COLOR) {
-        fillColor = this._getStatusColor(cnlDataExt);
-    }
-
-    // Resolve fill color from conditions
-    if (cnlDataExt.d.stat > 0 && props.conditions) {
-        var cnlVal = props.maximum ? 100.0 * cnlDataExt.d.val / props.maximum : cnlDataExt.d.val;
-        for (var cond of props.conditions) {
-            if (scada.scheme.calc.conditionSatisfied(cond, cnlVal)) {
-                fillColor = cond.color;
-                break;
-            }
-        }
-    }
-
-    // Resolve stroke color
-    var strokeColor = props.strokeColor === this.STATUS_COLOR
-        ? this._getStatusColor(cnlDataExt)
-        : null;
-
-    // Use cached draw instance; svg_shapes selector skips defs/title/etc.
-    // Writes via .css() (inline style) to override both Inkscape inline style
-    // and presentational attribute SVGs. Detects visibility via _getSvgValue()
-    // which checks inline style first, then presentational attribute.
-    var draw = component._svgDraw;
-    if (!draw) return;
-
-    draw.find(svg_shapes).forEach((element) => {
-        if (!(element instanceof SVG.Element)) return;
-        if (this._isSvgValueVisible(this._getSvgValue(element, "fill"))) {
-            element.css({ fill: fillColor });
-        }
-        if (strokeColor && this._isSvgValueVisible(this._getSvgValue(element, "stroke"))) {
-            element.css({ stroke: strokeColor });
-        }
-    });
+    // Use shared function to apply LED colors
+    applyLedColors(component, renderContext, component._svgDraw);
 };
 
 /********** Level Renderer **********/
@@ -301,7 +348,7 @@ scada.scheme.LevelRenderer.prototype.createDom = function (component, renderCont
 
 scada.scheme.LevelRenderer.prototype.updateData = function (component, renderContext) {
     // Apply LED color logic first (shared fill/stroke from conditions)
-    scada.scheme.LedRenderer.prototype.updateData.call(this, component, renderContext);
+    applyLedColors(component, renderContext, component._svgDraw);
 
     var props = component.props;
     if (props.inCnlNum <= 0) return;
@@ -318,10 +365,7 @@ scada.scheme.LevelRenderer.prototype.updateData = function (component, renderCon
         var clipValue = (100 - proportion * 100).toFixed(2) + "%";
         var clipPath;
 
-        // DirectionTypes enum serialized as string name (consistent with StyleProperties pattern).
-        // "Default" = Bottom to Top, "One" = Top to Bottom,
-        // "Two" = Left to Right, "Three" = Right to Left.
-        // Integer fallback included for safety.
+        // DirectionTypes enum: 0=Default (Bottom to Top), 1=Top to Bottom, 2=Left to Right, 3=Right to Left
         if (props.directionType != null) {
             switch (props.directionType) {
                 case 1:  clipPath = "inset(0 0 " + clipValue + " 0)"; break; // Top to Bottom
@@ -379,23 +423,24 @@ scada.scheme.GaugeRenderer.prototype.createDom = function (component, renderCont
         label: value => Math.round(value * 100) / 100
     });
 
-    // Gauge.js does not expose dialWidth or dialColor as constructor options,
-    // so we patch the rendered SVG directly after initialization.
-    // This depends on Gauge.js internal DOM structure (svg.gauge > path.dial/path.value).
-    // If Gauge.js is upgraded, verify these selectors still hold.
-    //
-    // Uses .css() (inline style) — consistent with how gauge.js itself writes color
-    // internally via gaugeValuePath.style.stroke in setGaugeColor(). Using .attr()
-    // would lose to existing inline style set by gauge.js.
-    //
-    // Guard against null/undefined: if props are not set, CSS variant rules apply.
+    // Apply dialWidth and dialColor if provided.
+    // These rely on Gauge.js internal DOM structure.
+    // We try to apply them, and if selectors fail, we log a warning but continue.
     if (props.dialWidth) {
-        divContainer.find("svg.gauge > path.dial, svg.gauge > path.value")
-            .css("stroke-width", props.dialWidth);
+        var $paths = divContainer.find("svg.gauge > path.dial, svg.gauge > path.value");
+        if ($paths.length) {
+            $paths.css("stroke-width", props.dialWidth);
+        } else {
+            console.warn('Gauge internal structure may have changed; dialWidth might not apply.');
+        }
     }
     if (props.dialColor) {
-        divContainer.find("svg.gauge > path.dial")
-            .css("stroke", props.dialColor);
+        var $dial = divContainer.find("svg.gauge > path.dial");
+        if ($dial.length) {
+            $dial.css("stroke", props.dialColor);
+        } else {
+            console.warn('Gauge internal structure may have changed; dialColor might not apply.');
+        }
     }
 };
 
@@ -415,12 +460,7 @@ scada.scheme.GaugeRenderer.prototype.updateData = function (component, renderCon
 
     if (props.conditions && cnlDataExt.d.stat > 0) {
         var elem = component.dom.find(".gauge-container svg.gauge path.value");
-        // Note: GaugeRenderer uses props.max (consistent with Gauge() constructor options above).
-        // LedRenderer/LevelRenderer use props.maximum — different component props schema.
         var normalizedVal = 100.0 * cnlVal / props.max;
-        // Use .css() (inline style) — consistent with gauge.js internal setGaugeColor()
-        // which writes via gaugeValuePath.style.stroke. Using .attr() would lose
-        // to the existing inline style already set by gauge.js.
         for (var cond of props.conditions) {
             if (scada.scheme.calc.conditionSatisfied(cond, normalizedVal)) {
                 elem.css("stroke", cond.color);
