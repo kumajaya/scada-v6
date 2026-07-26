@@ -206,21 +206,29 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                     elemValue = BitConverter.ToInt16(buf, 0);
                     break;
                 case ElemType.UInt:
-                    return BitConverter.ToUInt32(buf, 0);
+                    elemValue = BitConverter.ToUInt32(buf, 0);
+                    break;
                 case ElemType.Int:
-                    return BitConverter.ToInt32(buf, 0);
-                case ElemType.ULong: // possible data loss
-                    return BitConverter.ToUInt64(buf, 0);
-                case ElemType.Long:  // possible data loss
-                    return BitConverter.ToInt64(buf, 0);
+                    elemValue = BitConverter.ToInt32(buf, 0);
+                    break;
+                case ElemType.ULong:
+                    elemValue = BitConverter.ToUInt64(buf, 0);
+                    break;
+                case ElemType.Long:
+                    elemValue = BitConverter.ToInt64(buf, 0);
+                    break;
                 case ElemType.Float:
-                    return BitConverter.ToSingle(buf, 0);
+                    elemValue = BitConverter.ToSingle(buf, 0);
+                    break;
                 case ElemType.Double:
-                    return BitConverter.ToDouble(buf, 0);
+                    elemValue = BitConverter.ToDouble(buf, 0);
+                    break;
                 case ElemType.Bool:
-                    return buf[0] > 0 ? 1.0 : 0.0;
+                    elemValue = buf[0] > 0 ? 1.0 : 0.0;
+                    break;
                 default:
-                    return 0.0;
+                    elemValue = 0.0;
+                    break;
             }
 
             // Check if scaling is needed

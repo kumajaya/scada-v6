@@ -128,7 +128,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 chkElemIsBitMask.Enabled = elemGroup.BitMaskEnabled;
                 txtElemScaling.Text = elem.Scaling;
                 txtElemScaling.Enabled = elemGroup.ScalingEnabled &&
-                        (elem.ElemType == ElemType.UShort || elem.ElemType == ElemType.Short);
+                        elem.ElemType != ElemType.Undefined &&
+                        elem.ElemType != ElemType.Bool;
                 gbElem.Enabled = true;
             }
         }
@@ -212,7 +213,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 txtElemAddress.Text = elemTag.AddressRange;
                 txtElemScaling.Text = elemTag.Elem.Scaling;
                 txtElemScaling.Enabled = elemTag.ElemGroup.ScalingEnabled &&
-                        (elemType == ElemType.UShort || elemType == ElemType.Short);
+                        elemType != ElemType.Undefined &&
+                        elemType != ElemType.Bool;
                 OnObjectChanged(TreeUpdateTypes.CurrentNode | TreeUpdateTypes.NextSiblings);
             }
         }

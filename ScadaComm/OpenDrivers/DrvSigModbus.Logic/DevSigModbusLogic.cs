@@ -67,7 +67,10 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             modbusCmd.ElemCnt = 1;
             modbusCmd.ByteOrder = ModbusUtils.ParseByteOrder(elemConfig.ByteOrder) ??
                 options.GetDefaultByteOrder(ModbusUtils.GetDataLength(elemConfig.ElemType));
-            modbusCmd.Scaling = elemConfig.Scaling;
+            // Filter scaling: only for numeric types
+            modbusCmd.Scaling = (elemConfig.ElemType != ElemType.Undefined && elemConfig.ElemType != ElemType.Bool) 
+                ? elemConfig.Scaling 
+                : "";
             modbusCmd.CmdNum = 0;
             modbusCmd.CmdCode = elemConfig.TagCode;
 
@@ -88,7 +91,10 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             modbusCmd.ElemCnt = cmdConfig.ElemCnt;
             modbusCmd.ByteOrder = ModbusUtils.ParseByteOrder(cmdConfig.ByteOrder) ??
                 options.GetDefaultByteOrder(ModbusUtils.GetDataLength(cmdConfig.ElemType) * cmdConfig.ElemCnt);
-            modbusCmd.Scaling = cmdConfig.Scaling;
+            // Filter scaling: only for numeric types
+            modbusCmd.Scaling = (cmdConfig.ElemType != ElemType.Undefined && cmdConfig.ElemType != ElemType.Bool) 
+                ? cmdConfig.Scaling 
+                : "";
             modbusCmd.CmdNum = cmdConfig.CmdNum;
             modbusCmd.CmdCode = cmdConfig.CmdCode;
 
@@ -292,7 +298,10 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                         elem.ElemType = elemConfig.ElemType;
                         elem.ByteOrder = ModbusUtils.ParseByteOrder(elemConfig.ByteOrder) ??
                             deviceTemplate.Options.GetDefaultByteOrder(ModbusUtils.GetDataLength(elemConfig.ElemType));
-                        elem.Scaling = elemConfig.Scaling;
+                        // Filter scaling: only for numeric types
+                        elem.Scaling = (elem.ElemType != ElemType.Undefined && elem.ElemType != ElemType.Bool) 
+                            ? elemConfig.Scaling 
+                            : "";
                         elemGroup.Elems.Add(elem);
                     }
 

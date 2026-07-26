@@ -208,7 +208,10 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             if (cmd != null && cmd.ScalingEnabled)
             {
                 txtCmdScaling.Text = cmd.Scaling;
-                txtCmdScaling.Enabled = true;
+                // Disable scaling for Bool and Undefined types
+                bool isNumeric = cmd.ElemType != ElemType.Undefined && cmd.ElemType != ElemType.Bool;
+                txtCmdScaling.Enabled = isNumeric;
+                txtCmdScaling.BackColor = isNumeric ? SystemColors.Window : SystemColors.Control;
             }
             else
             {
@@ -378,6 +381,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 {
                     cmd.ElemType = newElemType;
                     OnObjectChanged(TreeUpdateTypes.CurrentNode);
+                    // Update scaling UI state based on the new type
+                    ShowScaling(cmd);
                 }
             }
         }

@@ -214,7 +214,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             bool reverse = true;
             double rawVal = cmdVal;
 
-            if (!string.IsNullOrWhiteSpace(Scaling))
+            // Apply scaling only for numeric types
+            if (ElemType != ElemType.Undefined && ElemType != ElemType.Bool &&
+                !string.IsNullOrWhiteSpace(Scaling))
             {
                 double[] scaling = ModbusUtils.ParseDoubleArray(Scaling);
                 if (scaling.Length == 4 &&
@@ -222,12 +224,28 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                     Math.Abs(scaling[3] - scaling[2]) > 1e-9)
                 {
                     rawVal = ModbusUtils.GetScaledValue(cmdVal, scaling[2], scaling[3], scaling[0], scaling[1]);
-                    rawVal = Math.Round(rawVal, 0);
 
+                    // Round only for integer types
+                    if (ElemType == ElemType.UShort || ElemType == ElemType.Short ||
+                        ElemType == ElemType.UInt || ElemType == ElemType.Int ||
+                        ElemType == ElemType.ULong || ElemType == ElemType.Long)
+                    {
+                        rawVal = Math.Round(rawVal, 0);
+                    }
+
+                    // Range validation for integer types
                     if (ElemType == ElemType.UShort && (rawVal < 0 || rawVal > 65535))
                         throw new ArgumentException($"Scaled value {rawVal} is out of range for UShort (0-65535).");
                     if (ElemType == ElemType.Short && (rawVal < -32768 || rawVal > 32767))
                         throw new ArgumentException($"Scaled value {rawVal} is out of range for Short (-32768-32767).");
+                    if (ElemType == ElemType.UInt && (rawVal < 0 || rawVal > 4294967295))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for UInt.");
+                    if (ElemType == ElemType.Int && (rawVal < -2147483648 || rawVal > 2147483647))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for Int.");
+                    if (ElemType == ElemType.ULong && (rawVal < 0 || rawVal > 18446744073709551615))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for ULong.");
+                    if (ElemType == ElemType.Long && (rawVal < -9223372036854775808 || rawVal > 9223372036854775807))
+                        throw new ArgumentException($"Scaled value {rawVal} is out of range for Long.");
                 }
             }
 
@@ -240,25 +258,25 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                     Data = BitConverter.GetBytes((short)rawVal);
                     break;
                 case ElemType.UInt:
-                    Data = BitConverter.GetBytes((uint)cmdVal);
+                    Data = BitConverter.GetBytes((uint)rawVal);
                     break;
                 case ElemType.Int:
-                    Data = BitConverter.GetBytes((int)cmdVal);
+                    Data = BitConverter.GetBytes((int)rawVal);
                     break;
                 case ElemType.ULong:
-                    Data = BitConverter.GetBytes((ulong)cmdVal);
+                    Data = BitConverter.GetBytes((ulong)rawVal);
                     break;
                 case ElemType.Long:
-                    Data = BitConverter.GetBytes((long)cmdVal);
+                    Data = BitConverter.GetBytes((long)rawVal);
                     break;
                 case ElemType.Float:
-                    Data = BitConverter.GetBytes((float)cmdVal);
+                    Data = BitConverter.GetBytes((float)rawVal);
                     break;
                 case ElemType.Double:
-                    Data = BitConverter.GetBytes(cmdVal);
+                    Data = BitConverter.GetBytes(rawVal);
                     break;
                 default:
-                    Data = BitConverter.GetBytes(cmdVal);
+                    Data = BitConverter.GetBytes(rawVal);
                     reverse = false;
                     break;
             }
