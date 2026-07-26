@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
+using System.Buffers.Binary;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
 {
@@ -73,7 +73,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets or sets the byte order.
         /// </summary>
-        public int[] ByteOrder { get; set; }
+        public int[]? ByteOrder { get; set; }
 
         /// <summary>
         /// Gets or sets the scaling double array.
@@ -98,7 +98,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets or sets the data of the multiple command.
         /// </summary>
-        public byte[] Data { get; set; }
+        public byte[]? Data { get; set; }
 
 
         /// <summary>
@@ -109,12 +109,13 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             if (DataBlock == DataBlock.Custom)
             {
                 // build PDU for custom command
-                int dataLength = Data == null ? 0 : Data.Length;
+                byte[]? data = Data;
+                int dataLength = data == null ? 0 : data.Length;
                 ReqPDU = new byte[1 + dataLength];
                 ReqPDU[0] = FuncCode;
 
-                if (dataLength > 0)
-                    Buffer.BlockCopy(Data, 0, ReqPDU, 1, dataLength);
+                if (data != null && dataLength > 0)
+                    Buffer.BlockCopy(data, 0, ReqPDU, 1, dataLength);
 
                 RespPduLen = ReqPDU.Length; // assuming echo
             }
@@ -134,6 +135,12 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                     quantity = ElemCnt * ModbusUtils.GetQuantity(ElemType);
                     dataLength = quantity * 2;
                 }
+
+                // Ensure Data is allocated even if InitReqPDU runs before SetCmdData
+                // (e.g. during device tag initialization), and to guard against
+                // ApplyByteOrder implementations that may not tolerate a null src.
+                if (Data == null)
+                    Data = new byte[dataLength];
 
                 ReqPDU = new byte[6 + dataLength];
                 ReqPDU[0] = FuncCode;
@@ -164,8 +171,11 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                 }
                 else
                 {
+                    // Ensure Data is allocated even if InitReqPDU runs before SetCmdData.
+                    if (Data == null && dataLength != 2)
+                        Data = new byte[dataLength];
 
-                    byte[] data = dataLength == 2 ?
+                    byte[]? data = dataLength == 2 ?
                         new byte[] // standard Modbus
                         {
                             (byte)(Value / 256),
@@ -189,7 +199,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             if (base.DecodeRespPDU(buffer, offset, length, out errMsg))
             {
                 if (DataBlock == DataBlock.Custom ||
-                    buffer[offset + 1] == ReqPDU[1] && buffer[offset + 2] == ReqPDU[2] &&
+                    buffer[offset + 1] == ReqPDU![1] && buffer[offset + 2] == ReqPDU[2] &&
                     buffer[offset + 3] == ReqPDU[3] && buffer[offset + 4] == ReqPDU[4])
                 {
                     return true;
@@ -211,17 +221,13 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// </summary>
         public void SetCmdData(double cmdVal)
         {
-            bool reverse = true;
             double rawVal = cmdVal;
 
             // Apply scaling only for numeric types
-            if (ElemType != ElemType.Undefined && ElemType != ElemType.Bool &&
-                !string.IsNullOrWhiteSpace(Scaling))
+            if (ElemType != ElemType.Undefined && ElemType != ElemType.Bool)
             {
-                double[] scaling = ModbusUtils.ParseDoubleArray(Scaling);
-                if (scaling.Length == 4 &&
-                    Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
-                    Math.Abs(scaling[3] - scaling[2]) > 1e-9)
+                double[]? scaling = GetParsedScaling();
+                if (scaling != null)
                 {
                     rawVal = ModbusUtils.GetScaledValue(cmdVal, scaling[2], scaling[3], scaling[0], scaling[1]);
 
@@ -242,47 +248,88 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                         throw new ArgumentException($"Scaled value {rawVal} is out of range for UInt.");
                     if (ElemType == ElemType.Int && (rawVal < -2147483648 || rawVal > 2147483647))
                         throw new ArgumentException($"Scaled value {rawVal} is out of range for Int.");
-                    if (ElemType == ElemType.ULong && (rawVal < 0 || rawVal > 18446744073709551615))
-                        throw new ArgumentException($"Scaled value {rawVal} is out of range for ULong.");
-                    if (ElemType == ElemType.Long && (rawVal < -9223372036854775808 || rawVal > 9223372036854775807))
-                        throw new ArgumentException($"Scaled value {rawVal} is out of range for Long.");
+
+                    // Use decimal with try-catch for accurate ULong/Long range validation
+                    if (ElemType == ElemType.ULong)
+                    {
+                        try
+                        {
+                            decimal d = (decimal)rawVal;
+                            if (d < 0 || d > ulong.MaxValue)
+                                throw new ArgumentException($"Scaled value {rawVal} is out of range for ULong.");
+                        }
+                        catch (OverflowException)
+                        {
+                            throw new ArgumentException($"Scaled value {rawVal} is out of range for ULong.");
+                        }
+                    }
+                    if (ElemType == ElemType.Long)
+                    {
+                        try
+                        {
+                            decimal d = (decimal)rawVal;
+                            if (d < long.MinValue || d > long.MaxValue)
+                                throw new ArgumentException($"Scaled value {rawVal} is out of range for Long.");
+                        }
+                        catch (OverflowException)
+                        {
+                            throw new ArgumentException($"Scaled value {rawVal} is out of range for Long.");
+                        }
+                    }
                 }
             }
 
+            // Directly allocate Data with correct endianness (Big-Endian, no reverse needed)
             switch (ElemType)
             {
                 case ElemType.UShort:
-                    Data = BitConverter.GetBytes((ushort)rawVal);
+                    Data = new byte[2];
+                    BinaryPrimitives.WriteUInt16BigEndian(Data, (ushort)rawVal);
                     break;
                 case ElemType.Short:
-                    Data = BitConverter.GetBytes((short)rawVal);
+                    Data = new byte[2];
+                    BinaryPrimitives.WriteInt16BigEndian(Data, (short)rawVal);
                     break;
                 case ElemType.UInt:
-                    Data = BitConverter.GetBytes((uint)rawVal);
+                    Data = new byte[4];
+                    BinaryPrimitives.WriteUInt32BigEndian(Data, (uint)rawVal);
                     break;
                 case ElemType.Int:
-                    Data = BitConverter.GetBytes((int)rawVal);
-                    break;
-                case ElemType.ULong:
-                    Data = BitConverter.GetBytes((ulong)rawVal);
-                    break;
-                case ElemType.Long:
-                    Data = BitConverter.GetBytes((long)rawVal);
+                    Data = new byte[4];
+                    BinaryPrimitives.WriteInt32BigEndian(Data, (int)rawVal);
                     break;
                 case ElemType.Float:
-                    Data = BitConverter.GetBytes((float)rawVal);
+                    Data = new byte[4];
+                    BinaryPrimitives.WriteSingleBigEndian(Data, (float)rawVal);
+                    break;
+                case ElemType.ULong:
+                    Data = new byte[8];
+                    BinaryPrimitives.WriteUInt64BigEndian(Data, (ulong)rawVal);
+                    break;
+                case ElemType.Long:
+                    Data = new byte[8];
+                    BinaryPrimitives.WriteInt64BigEndian(Data, (long)rawVal);
                     break;
                 case ElemType.Double:
-                    Data = BitConverter.GetBytes(rawVal);
+                    Data = new byte[8];
+                    BinaryPrimitives.WriteDoubleBigEndian(Data, rawVal);
                     break;
                 default:
+                    // Fallback for Undefined, Bool, or any other type: keep native byte order
+                    // (matches original behavior, which never reversed this case).
                     Data = BitConverter.GetBytes(rawVal);
-                    reverse = false;
                     break;
             }
+        }
 
-            if (reverse)
-                Array.Reverse(Data);
+        private double[]? _parsedScaling; // cached parsed scaling
+
+        /// <summary>
+        /// Gets the parsed scaling array, or null if scaling is not applicable or invalid.
+        /// </summary>
+        public double[]? GetParsedScaling()
+        {
+            return ModbusUtils.GetParsedScaling(Scaling, ref _parsedScaling);
         }
     }
 }

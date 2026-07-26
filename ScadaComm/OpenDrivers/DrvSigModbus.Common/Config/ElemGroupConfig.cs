@@ -2,8 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Scada.Comm.Drivers.DrvSigModbus.Protocol;
-using System;
-using System.Collections.Generic;
 using System.Xml;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Config
@@ -77,8 +75,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public virtual void LoadFromXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             Active = xmlElem.GetAttrAsBool("active");
             DataBlock = xmlElem.GetAttrAsEnum("dataBlock", xmlElem.GetAttrAsEnum<DataBlock>("tableType"));
@@ -90,20 +87,23 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
             bool defaultBitMask = !BitMaskEnabled;
             int maxElemCnt = MaxElemCnt;
 
-            foreach (XmlElement elemElem in xmlElem.SelectNodes("Elem"))
+            if (xmlElem.SelectNodes("Elem") is XmlNodeList elemNodes)
             {
-                if (Elems.Count >= maxElemCnt)
-                    break;
+                foreach (XmlElement elemElem in elemNodes)
+                {
+                    if (Elems.Count >= maxElemCnt)
+                        break;
 
-                ElemConfig elemConfig = CreateElemConfig();
-                elemConfig.ElemType = elemElem.GetAttrAsEnum("type", defaultElemType);
-                elemConfig.ByteOrder = elemElem.GetAttrAsString("byteOrder");
-                elemConfig.ReadOnly = elemElem.GetAttrAsBool("readOnly", defaultReadOnly);
-                elemConfig.IsBitMask = elemElem.GetAttrAsBool("isBitMask", defaultBitMask);
-                elemConfig.Scaling = elemElem.GetAttrAsString("scaling", "");
-                elemConfig.TagCode = elemElem.GetAttrAsString("tagCode");
-                elemConfig.Name = elemElem.GetAttrAsString("name");
-                Elems.Add(elemConfig);
+                    ElemConfig elemConfig = CreateElemConfig();
+                    elemConfig.ElemType = elemElem.GetAttrAsEnum("type", defaultElemType);
+                    elemConfig.ByteOrder = elemElem.GetAttrAsString("byteOrder");
+                    elemConfig.ReadOnly = elemElem.GetAttrAsBool("readOnly", defaultReadOnly);
+                    elemConfig.IsBitMask = elemElem.GetAttrAsBool("isBitMask", defaultBitMask);
+                    elemConfig.Scaling = elemElem.GetAttrAsString("scaling", "");
+                    elemConfig.TagCode = elemElem.GetAttrAsString("tagCode");
+                    elemConfig.Name = elemElem.GetAttrAsString("name");
+                    Elems.Add(elemConfig);
+                }
             }
         }
 
@@ -112,8 +112,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public virtual void SaveToXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             xmlElem.SetAttribute("active", Active);
             xmlElem.SetAttribute("dataBlock", DataBlock);

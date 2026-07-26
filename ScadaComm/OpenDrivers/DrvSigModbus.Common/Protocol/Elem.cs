@@ -35,7 +35,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets or sets the byte order.
         /// </summary>
-        public int[] ByteOrder { get; set; }
+        public int[]? ByteOrder { get; set; }
 
         /// <summary>
         /// Gets or sets the scaling double array.
@@ -45,7 +45,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets or sets the auxiliary object.
         /// </summary>
-        public object Aux { get; set; }
+        public object? Aux { get; set; }
 
         /// <summary>
         /// Gets the quantity of addresses.
@@ -67,6 +67,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             {
                 return ModbusUtils.GetDataLength(ElemType);
             }
+        }
+
+        private double[]? _parsedScaling; // cached parsed scaling
+
+        /// <summary>
+        /// Gets the parsed scaling array, or null if scaling is not applicable or invalid.
+        /// </summary>
+        public double[]? GetParsedScaling()
+        {
+            return ModbusUtils.GetParsedScaling(Scaling, ref _parsedScaling);
         }
     }
 }

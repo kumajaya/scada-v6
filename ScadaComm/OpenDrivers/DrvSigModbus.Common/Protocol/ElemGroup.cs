@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
-using System.Collections.Generic;
-
 namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
 {
     /// <summary>
@@ -23,7 +20,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         {
             reqDescr = "";
             Elems = new List<Elem>();
-            ElemData = null;
+            ElemData = Array.Empty<byte[]>();
             StartTagIdx = -1;
 
             SetFuncCode(ModbusUtils.GetReadFuncCode(dataBlock));
@@ -104,9 +101,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             for (int i = 0; i < elemCnt; i++)
             {
                 Elem elem = Elems[i];
-                byte[] elemVal = new byte[elem.DataLength];
-                Array.Clear(elemVal, 0, elemVal.Length);
-                ElemData[i] = elemVal;
+                // Remove Array.Clear as new byte array is already zero-initialized
+                ElemData[i] = new byte[elem.DataLength];
             }
         }
 
@@ -181,69 +177,58 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         public double GetElemVal(int elemIdx)
         {
             Elem elem = Elems[elemIdx];
-            byte[] elemData = ElemData[elemIdx];
-            byte[] buf;
+            ReadOnlySpan<byte> src = ElemData[elemIdx].AsSpan();
 
             // order bytes if needed
+            double elemValue;
             if (elem.ByteOrder == null)
             {
-                buf = elemData;
+                elemValue = GetValueFromBuffer(src, elem.ElemType);
             }
             else
             {
-                buf = new byte[elemData.Length];
-                ModbusUtils.ApplyByteOrder(elemData, buf, elem.ByteOrder);
+                Span<byte> ordered = stackalloc byte[src.Length];
+                ModbusUtils.ApplyByteOrder(src, ordered, elem.ByteOrder);
+                elemValue = GetValueFromBuffer(ordered, elem.ElemType);
             }
 
-            // calculate value
-            double elemValue;
-            switch (elem.ElemType)
-            {
-                case ElemType.UShort:
-                    elemValue = BitConverter.ToUInt16(buf, 0);
-                    break;
-                case ElemType.Short:
-                    elemValue = BitConverter.ToInt16(buf, 0);
-                    break;
-                case ElemType.UInt:
-                    elemValue = BitConverter.ToUInt32(buf, 0);
-                    break;
-                case ElemType.Int:
-                    elemValue = BitConverter.ToInt32(buf, 0);
-                    break;
-                case ElemType.ULong:
-                    elemValue = BitConverter.ToUInt64(buf, 0);
-                    break;
-                case ElemType.Long:
-                    elemValue = BitConverter.ToInt64(buf, 0);
-                    break;
-                case ElemType.Float:
-                    elemValue = BitConverter.ToSingle(buf, 0);
-                    break;
-                case ElemType.Double:
-                    elemValue = BitConverter.ToDouble(buf, 0);
-                    break;
-                case ElemType.Bool:
-                    elemValue = buf[0] > 0 ? 1.0 : 0.0;
-                    break;
-                default:
-                    elemValue = 0.0;
-                    break;
-            }
-
-            // Check if scaling is needed
-            if (!string.IsNullOrWhiteSpace(elem.Scaling))
-            {
-                double[] scaling = ModbusUtils.ParseDoubleArray(elem.Scaling);
-                if (scaling.Length == 4 && Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
-                    Math.Abs(scaling[3] - scaling[2]) > 1e-9)
-                {
-                    return ModbusUtils.GetScaledValue(elemValue, scaling[0], scaling[1], scaling[2], scaling[3]);
-                }
-            }
+            // Apply scaling if needed (cached parsing)
+            double[]? scaling = elem.GetParsedScaling();
+            if (scaling != null)
+                return ModbusUtils.GetScaledValue(elemValue, scaling[0], scaling[1], scaling[2], scaling[3]);
 
             // Return the original value
             return elemValue;
+        }
+
+        /// <summary>
+        /// Converts the buffer content to a double according to the element type.
+        /// </summary>
+        private static double GetValueFromBuffer(ReadOnlySpan<byte> buffer, ElemType elemType)
+        {
+            switch (elemType)
+            {
+                case ElemType.UShort:
+                    return BitConverter.ToUInt16(buffer);
+                case ElemType.Short:
+                    return BitConverter.ToInt16(buffer);
+                case ElemType.UInt:
+                    return BitConverter.ToUInt32(buffer);
+                case ElemType.Int:
+                    return BitConverter.ToInt32(buffer);
+                case ElemType.ULong: // possible data loss
+                    return BitConverter.ToUInt64(buffer);
+                case ElemType.Long:  // possible data loss
+                    return BitConverter.ToInt64(buffer);
+                case ElemType.Float:
+                    return BitConverter.ToSingle(buffer);
+                case ElemType.Double:
+                    return BitConverter.ToDouble(buffer);
+                case ElemType.Bool:
+                    return buffer[0] > 0 ? 1.0 : 0.0;
+                default:
+                    return 0.0;
+            }
         }
     }
 }

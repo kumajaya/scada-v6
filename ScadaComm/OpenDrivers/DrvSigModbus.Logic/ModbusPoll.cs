@@ -98,7 +98,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         /// <summary>
         /// Gets the request method.
         /// </summary>
-        public RequestDelegate DoRequest { get; protected set; }
+        public RequestDelegate DoRequest { get; protected set; } = null!;
 
 
         /// <summary>
@@ -128,9 +128,13 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         {
             bool result = false;
 
+            // ReqADU is guaranteed set by the time a DataUnit reaches DoRequest (InitReqADU always runs first)
+            byte[] reqAdu = dataUnit.ReqADU ??
+                throw new InvalidOperationException("The request ADU is not initialized.");
+
             // send request
             log.WriteLine(dataUnit.ReqDescr);
-            Connection.Write(dataUnit.ReqADU, 0, dataUnit.ReqADU.Length, ProtocolFormat.Hex, out string logText);
+            Connection.Write(reqAdu, 0, reqAdu.Length, ProtocolFormat.Hex, out string logText);
             log.WriteLine(logText);
 
             // receive response
@@ -143,7 +147,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             {
                 log.WriteLine(ModbusPhrases.CommError);
             }
-            else if (InBuf[0] != dataUnit.ReqADU[0]) // validate device address
+            else if (InBuf[0] != reqAdu[0]) // validate device address
             {
                 log.WriteLine(ModbusPhrases.InvalidDevAddr);
             }
@@ -224,7 +228,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                     {
                         try
                         {
-                            aduBuf[i] = byte.Parse(line.Substring(j, 2), NumberStyles.HexNumber);
+                            aduBuf[i] = byte.Parse(line!.Substring(j, 2), NumberStyles.HexNumber);
                         }
                         catch
                         {
@@ -274,16 +278,20 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         {
             bool result = false;
 
+            // ReqADU is guaranteed set by the time a DataUnit reaches DoRequest (InitReqADU always runs first)
+            byte[] reqAdu = dataUnit.ReqADU ??
+                throw new InvalidOperationException("The request ADU is not initialized.");
+
             // specify transaction ID
             if (++TransactionID == 0)
                 TransactionID = 1;
 
-            dataUnit.ReqADU[0] = (byte)(TransactionID / 256);
-            dataUnit.ReqADU[1] = (byte)(TransactionID % 256);
+            reqAdu[0] = (byte)(TransactionID / 256);
+            reqAdu[1] = (byte)(TransactionID % 256);
 
             // send request
             log.WriteLine(dataUnit.ReqDescr);
-            Connection.Write(dataUnit.ReqADU, 0, dataUnit.ReqADU.Length, ProtocolFormat.Hex, out string logText);
+            Connection.Write(reqAdu, 0, reqAdu.Length, ProtocolFormat.Hex, out string logText);
             log.WriteLine(logText);
 
             // receive response
@@ -295,9 +303,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             {
                 int pduLen = InBuf[4] * 256 + InBuf[5] - 1;
 
-                if (InBuf[0] == dataUnit.ReqADU[0] && InBuf[1] == dataUnit.ReqADU[1] && // transaction ID
-                    InBuf[2] == 0 && InBuf[3] == 0 && pduLen > 0 &&                     // protocol ID
-                    InBuf[6] == dataUnit.ReqADU[6])                                     // unit ID
+                if (InBuf[0] == reqAdu[0] && InBuf[1] == reqAdu[1] && // transaction ID
+                    InBuf[2] == 0 && InBuf[3] == 0 && pduLen > 0 &&   // protocol ID
+                    InBuf[6] == reqAdu[6])                            // unit ID
                 {
                     // read PDU
                     readCnt = Connection.Read(InBuf, 7, pduLen, Timeout, ProtocolFormat.Hex, out logText);

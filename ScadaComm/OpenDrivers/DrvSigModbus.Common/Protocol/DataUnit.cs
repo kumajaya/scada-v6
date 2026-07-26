@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Text;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
@@ -50,7 +49,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets or sets the auxiliary object.
         /// </summary>
-        public object Aux { get; set; }
+        public object? Aux { get; set; }
 
         /// <summary>
         /// Gets a description of the request that reads or writes the data unit.
@@ -71,7 +70,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets the request PDU.
         /// </summary>
-        public byte[] ReqPDU { get; protected set; }
+        public byte[]? ReqPDU { get; protected set; }
 
         /// <summary>
         /// Gets the length of the response PDU.
@@ -81,7 +80,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets the request ADU.
         /// </summary>
-        public byte[] ReqADU { get; protected set; }
+        public byte[]? ReqADU { get; protected set; }
 
         /// <summary>
         /// Gets the request string in the ASCII mode.
@@ -118,17 +117,19 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// </summary>
         public virtual void InitReqADU(byte devAddr, TransMode transMode)
         {
-            if (ReqPDU == null)
+            byte[]? reqPdu = ReqPDU;
+
+            if (reqPdu == null)
                 return;
 
-            int pduLen = ReqPDU.Length;
+            int pduLen = reqPdu.Length;
 
             switch (transMode)
             {
                 case TransMode.RTU:
                     ReqADU = new byte[pduLen + 3];
                     ReqADU[0] = devAddr;
-                    Buffer.BlockCopy(ReqPDU, 0, ReqADU, 1, ReqPDU.Length);
+                    Buffer.BlockCopy(reqPdu, 0, ReqADU, 1, pduLen);
                     ushort crc = ModbusUtils.CRC16(ReqADU, 0, pduLen + 1);
                     ReqADU[pduLen + 1] = (byte)(crc % 256);
                     ReqADU[pduLen + 2] = (byte)(crc / 256);
@@ -138,17 +139,13 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                 case TransMode.ASCII:
                     byte[] aduBuf = new byte[pduLen + 2];
                     aduBuf[0] = devAddr;
-                    Buffer.BlockCopy(ReqPDU, 0, aduBuf, 1, ReqPDU.Length);
+                    Buffer.BlockCopy(reqPdu, 0, aduBuf, 1, pduLen);
                     aduBuf[pduLen + 1] = ModbusUtils.LRC(aduBuf, 0, pduLen + 1);
 
-                    StringBuilder sbADU = new StringBuilder();
-                    foreach (byte b in aduBuf)
-                    {
-                        sbADU.Append(b.ToString("X2"));
-                    }
-
-                    ReqADU = Encoding.ASCII.GetBytes(sbADU.ToString());
-                    ReqStr = ModbusUtils.Colon + sbADU;
+                    // Use Convert.ToHexString instead of StringBuilder loop
+                    string hexADU = Convert.ToHexString(aduBuf);
+                    ReqADU = Encoding.ASCII.GetBytes(hexADU);
+                    ReqStr = ModbusUtils.Colon + hexADU;
                     RespAduLen = RespPduLen + 2;
                     break;
 
@@ -161,7 +158,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                     ReqADU[4] = (byte)((pduLen + 1) / 256);
                     ReqADU[5] = (byte)((pduLen + 1) % 256);
                     ReqADU[6] = devAddr;
-                    Buffer.BlockCopy(ReqPDU, 0, ReqADU, 7, ReqPDU.Length);
+                    Buffer.BlockCopy(reqPdu, 0, ReqADU, 7, pduLen);
                     RespAduLen = RespPduLen + 7;
                     break;
             }

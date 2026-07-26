@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Scada.Comm.Drivers.DrvSigModbus.Protocol;
-using System;
 using System.Xml;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Config
@@ -13,9 +12,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
     /// </summary>
     public class DeviceTemplateOptions
     {
-        private int[] byteOrderArr2; // the default byte order array for 2-byte elements
-        private int[] byteOrderArr4; // the default byte order array for 4-byte elements
-        private int[] byteOrderArr8; // the default byte order array for 8-byte elements
+        private int[]? byteOrderArr2; // the default byte order array for 2-byte elements
+        private int[]? byteOrderArr4; // the default byte order array for 4-byte elements
+        private int[]? byteOrderArr8; // the default byte order array for 8-byte elements
 
 
         /// <summary>
@@ -66,8 +65,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public virtual void LoadFromXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             byteOrderArr2 = null;
             byteOrderArr4 = null;
@@ -85,8 +83,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public virtual void SaveToXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             xmlElem.AppendElem("ZeroAddr", ZeroAddr);
             xmlElem.AppendElem("DecAddr", DecAddr);
@@ -98,7 +95,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// <summary>
         /// Gets the appropriate default byte order as array.
         /// </summary>
-        public int[] GetDefaultByteOrder(int byteCnt)
+        public int[]? GetDefaultByteOrder(int byteCnt)
         {
             switch (byteCnt)
             {

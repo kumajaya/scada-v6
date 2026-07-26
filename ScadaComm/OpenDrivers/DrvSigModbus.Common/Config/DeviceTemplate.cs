@@ -2,9 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Scada.Config;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Xml;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Config
@@ -18,17 +15,17 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// <summary>
         /// Gets the device template options.
         /// </summary>
-        public DeviceTemplateOptions Options { get; private set; }
+        public DeviceTemplateOptions Options { get; private set; } = new DeviceTemplateOptions();
 
         /// <summary>
         /// Gets the configuration of the element groups.
         /// </summary>
-        public List<ElemGroupConfig> ElemGroups { get; private set; }
+        public List<ElemGroupConfig> ElemGroups { get; private set; } = new List<ElemGroupConfig>();
 
         /// <summary>
         /// Gets the configuration of the commands.
         /// </summary>
-        public List<CmdConfig> Cmds { get; private set; }
+        public List<CmdConfig> Cmds { get; private set; } = new List<CmdConfig>();
 
         /// <summary>
         /// Gets the file name for a newly created device template.
@@ -53,7 +50,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         {
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(reader);
-            XmlElement rootElem = xmlDoc.DocumentElement;
+            XmlElement rootElem = xmlDoc.DocumentElement ??
+                throw new FormatException("The device template XML document has no root element.");
 
             // template options
             if ((rootElem.SelectSingleNode("Options") ?? rootElem.SelectSingleNode("Settings")) is XmlElement optionsElem)
@@ -64,24 +62,30 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
             {
                 int tagCnt = 0;
 
-                foreach (XmlElement elemGroupElem in elemGroupsNode.SelectNodes("ElemGroup"))
+                if (elemGroupsNode.SelectNodes("ElemGroup") is XmlNodeList elemGroupNodes)
                 {
-                    ElemGroupConfig elemGroupConfig = CreateElemGroupConfig();
-                    elemGroupConfig.LoadFromXml(elemGroupElem);
-                    elemGroupConfig.StartTagNum = tagCnt + 1;
-                    ElemGroups.Add(elemGroupConfig);
-                    tagCnt += elemGroupConfig.Elems.Count;
+                    foreach (XmlElement elemGroupElem in elemGroupNodes)
+                    {
+                        ElemGroupConfig elemGroupConfig = CreateElemGroupConfig();
+                        elemGroupConfig.LoadFromXml(elemGroupElem);
+                        elemGroupConfig.StartTagNum = tagCnt + 1;
+                        ElemGroups.Add(elemGroupConfig);
+                        tagCnt += elemGroupConfig.Elems.Count;
+                    }
                 }
             }
 
             // commands
             if (rootElem.SelectSingleNode("Cmds") is XmlNode cmdsNode)
             {
-                foreach (XmlElement cmdElem in cmdsNode.SelectNodes("Cmd"))
+                if (cmdsNode.SelectNodes("Cmd") is XmlNodeList cmdNodes)
                 {
-                    CmdConfig cmdConfig = CreateCmdConfig();
-                    cmdConfig.LoadFromXml(cmdElem);
-                    Cmds.Add(cmdConfig);
+                    foreach (XmlElement cmdElem in cmdNodes)
+                    {
+                        CmdConfig cmdConfig = CreateCmdConfig();
+                        cmdConfig.LoadFromXml(cmdElem);
+                        Cmds.Add(cmdConfig);
+                    }
                 }
             }
         }

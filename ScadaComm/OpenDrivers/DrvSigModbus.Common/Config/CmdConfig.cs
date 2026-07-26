@@ -2,7 +2,6 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using Scada.Comm.Drivers.DrvSigModbus.Protocol;
-using System;
 using System.Xml;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Config
@@ -99,8 +98,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public void LoadFromXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             DataBlock = xmlElem.GetAttrAsEnum("dataBlock", xmlElem.GetAttrAsEnum<DataBlock>("tableType"));
             Multiple = xmlElem.GetAttrAsBool("multiple");
@@ -120,8 +118,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
         /// </summary>
         public void SaveToXml(XmlElement xmlElem)
         {
-            if (xmlElem == null)
-                throw new ArgumentNullException(nameof(xmlElem));
+            ArgumentNullException.ThrowIfNull(xmlElem);
 
             xmlElem.SetAttribute("dataBlock", DataBlock);
 

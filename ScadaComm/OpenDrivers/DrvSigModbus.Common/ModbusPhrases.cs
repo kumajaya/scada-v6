@@ -14,25 +14,25 @@ namespace Scada.Comm.Drivers.DrvSigModbus
     public static class ModbusPhrases
     {
         // Scada.Comm.Drivers.DrvSigModbus.Config
-        public static string LoadTemplateError { get; private set; }
-        public static string SaveTemplateError { get; private set; }
+        public static string LoadTemplateError { get; private set; } = "";
+        public static string SaveTemplateError { get; private set; } = "";
 
         // Scada.Comm.Drivers.DrvSigModbus.Protocol
-        public static string Request { get; set; }
-        public static string Command { get; set; }
-        public static string DeviceError { get; set; }
-        public static string IllegalDataBlock { get; set; }
-        public static string OK { get; set; }
-        public static string CrcError { get; set; }
-        public static string LrcError { get; set; }
-        public static string CommError { get; set; }
-        public static string InvalidDevAddr { get; set; }
-        public static string InvalidSymbol { get; set; }
-        public static string InvalidAduLength { get; set; }
-        public static string InvalidMbap { get; set; }
-        public static string InvalidPduLength { get; set; }
-        public static string InvalidPduFuncCode { get; set; }
-        public static string InvalidPduData { get; set; }
+        public static string Request { get; set; } = "";
+        public static string Command { get; set; } = "";
+        public static string DeviceError { get; set; } = "";
+        public static string IllegalDataBlock { get; set; } = "";
+        public static string OK { get; set; } = "";
+        public static string CrcError { get; set; } = "";
+        public static string LrcError { get; set; } = "";
+        public static string CommError { get; set; } = "";
+        public static string InvalidDevAddr { get; set; } = "";
+        public static string InvalidSymbol { get; set; } = "";
+        public static string InvalidAduLength { get; set; } = "";
+        public static string InvalidMbap { get; set; } = "";
+        public static string InvalidPduLength { get; set; } = "";
+        public static string InvalidPduFuncCode { get; set; } = "";
+        public static string InvalidPduData { get; set; } = "";
 
         static ModbusPhrases()
         {

@@ -8,7 +8,6 @@ using Scada.Comm.Drivers.DrvSigModbus.Protocol;
 using Scada.Comm.Lang;
 using Scada.Data.Models;
 using Scada.Lang;
-using System.Collections.Generic;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Logic
 {
@@ -31,9 +30,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             }
         }
 
-        protected TransMode transMode;     // the data transfer mode of the communication line
-        protected DeviceModel deviceModel; // the device model
-        protected ModbusPoll modbusPoll;   // implements device polling
+        protected TransMode transMode;      // the data transfer mode of the communication line
+        protected DeviceModel? deviceModel; // the device model
+        protected ModbusPoll? modbusPoll;   // implements device polling
 
 
         /// <summary>
@@ -60,7 +59,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         private ModbusCmd CreateModbusCmd(DeviceTemplateOptions options,
             ElemGroupConfig elemGroupConfig, ElemConfig elemConfig, int elemAddrOffset)
         {
-            ModbusCmd modbusCmd = deviceModel.CreateModbusCmd(elemGroupConfig.DataBlock, elemConfig.Quantity > 1);
+            ModbusCmd modbusCmd = deviceModel!.CreateModbusCmd(elemGroupConfig.DataBlock, elemConfig.Quantity > 1);
             modbusCmd.Name = elemConfig.Name;
             modbusCmd.Address = (ushort)(elemGroupConfig.Address + elemAddrOffset);
             modbusCmd.ElemType = elemConfig.ElemType;
@@ -84,7 +83,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         /// </summary>
         private ModbusCmd CreateModbusCmd(DeviceTemplateOptions options, CmdConfig cmdConfig)
         {
-            ModbusCmd modbusCmd = deviceModel.CreateModbusCmd(cmdConfig.DataBlock, cmdConfig.Multiple);
+            ModbusCmd modbusCmd = deviceModel!.CreateModbusCmd(cmdConfig.DataBlock, cmdConfig.Multiple);
             modbusCmd.Name = cmdConfig.Name;
             modbusCmd.Address = (ushort)cmdConfig.Address;
             modbusCmd.ElemType = cmdConfig.ElemType;
@@ -173,7 +172,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         /// </summary>
         protected virtual TemplateDict GetTemplateDict()
         {
-            TemplateDict templateDict = LineContext.SharedData.ContainsKey(TemplateDictKey) ?
+            TemplateDict? templateDict = LineContext.SharedData.ContainsKey(TemplateDictKey) ?
                 LineContext.SharedData[TemplateDictKey] as TemplateDict : null;
 
             if (templateDict == null)
@@ -188,9 +187,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         /// <summary>
         /// Gets the device template from the shared dictionary.
         /// </summary>
-        protected virtual DeviceTemplate GetDeviceTemplate()
+        protected virtual DeviceTemplate? GetDeviceTemplate()
         {
-            DeviceTemplate deviceTemplate = null;
+            DeviceTemplate? deviceTemplate = null;
             string fileName = PollingOptions.CmdLine.Trim();
 
             if (string.IsNullOrEmpty(fileName))
@@ -203,7 +202,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             {
                 TemplateDict templateDict = GetTemplateDict();
 
-                if (templateDict.TryGetValue(fileName, out DeviceTemplate existingTemplate))
+                if (templateDict.TryGetValue(fileName, out DeviceTemplate? existingTemplate))
                 {
                     deviceTemplate = existingTemplate;
                 }
@@ -254,7 +253,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
 
             // update connection reference
             if (modbusPoll != null)
-                modbusPoll.Connection = Connection;
+                modbusPoll.Connection = Connection!;
         }
 
         /// <summary>
@@ -262,7 +261,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         /// </summary>
         public override void InitDeviceTags()
         {
-            DeviceTemplate deviceTemplate = GetDeviceTemplate();
+            DeviceTemplate? deviceTemplate = GetDeviceTemplate();
 
             if (deviceTemplate == null)
                 return;
@@ -276,7 +275,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             {
                 bool groupActive = elemGroupConfig.Active;
                 bool groupCommands = groupActive && elemGroupConfig.ReadOnlyEnabled;
-                ElemGroup elemGroup = null;
+                ElemGroup? elemGroup = null;
                 TagGroup tagGroup = new TagGroup(elemGroupConfig.Name) { Hidden = !groupActive };
                 int elemAddrOffset = 0;
 
@@ -293,7 +292,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                     // add model element
                     if (groupActive)
                     {
-                        Elem elem = elemGroup.CreateElem();
+                        Elem elem = elemGroup!.CreateElem();
                         elem.Name = elemConfig.Name;
                         elem.ElemType = elemConfig.ElemType;
                         elem.ByteOrder = ModbusUtils.ParseByteOrder(elemConfig.ByteOrder) ??
@@ -319,7 +318,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
 
                 if (groupActive)
                 {
-                    elemGroup.InitReqPDU();
+                    elemGroup!.InitReqPDU();
                     elemGroup.InitReqADU(deviceModel.Addr, transMode);
                     deviceModel.ElemGroups.Add(elemGroup);
                 }
@@ -345,7 +344,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         {
             base.Session();
 
-            if (deviceModel == null)
+            DeviceModel? model = deviceModel;
+
+            if (model == null)
             {
                 Log.WriteLine(Locale.IsRussian ?
                     "Невозможно опросить устройство, потому что модель устройства не определена" :
@@ -353,22 +354,23 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                 SleepPollingDelay();
                 LastRequestOK = false;
             }
-            else if (deviceModel.ElemGroups.Count > 0)
+            else if (model.ElemGroups.Count > 0)
             {
                 // request element groups
-                int elemGroupCnt = deviceModel.ElemGroups.Count;
+                int elemGroupCnt = model.ElemGroups.Count;
                 int elemGroupIdx = 0;
 
                 while (elemGroupIdx < elemGroupCnt && LastRequestOK)
                 {
-                    ElemGroup elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                    ElemGroup elemGroup = model.ElemGroups[elemGroupIdx];
                     LastRequestOK = false;
                     int tryNum = 0;
 
                     while (RequestNeeded(ref tryNum))
                     {
                         // perform request
-                        if (modbusPoll.DoRequest(elemGroup))
+                        // modbusPoll is always created together with deviceModel in InitModbusPoll
+                        if (modbusPoll!.DoRequest(elemGroup))
                         {
                             LastRequestOK = true;
                             SetTagData(elemGroup);
@@ -388,7 +390,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                         // set tag data as undefined for the current and the next element groups
                         while (elemGroupIdx < elemGroupCnt)
                         {
-                            elemGroup = deviceModel.ElemGroups[elemGroupIdx];
+                            elemGroup = model.ElemGroups[elemGroupIdx];
                             DeviceData.Invalidate(elemGroup.StartTagIdx, elemGroup.Elems.Count);
                             elemGroupIdx++;
                         }
@@ -413,7 +415,19 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
         {
             base.SendCommand(cmd);
 
-            if ((deviceModel.GetCmd(cmd.CmdCode) ?? deviceModel.GetCmd(cmd.CmdNum)) is ModbusCmd modbusCmd)
+            DeviceModel? model = deviceModel;
+
+            if (model == null)
+            {
+                LastRequestOK = false;
+                Log.WriteLine(Locale.IsRussian ?
+                    "Невозможно отправить команду, потому что модель устройства не определена" :
+                    "Unable to send the command because the device model is undefined");
+                FinishCommand();
+                return;
+            }
+
+            if ((model.GetCmd(cmd.CmdCode) ?? model.GetCmd(cmd.CmdNum)) is ModbusCmd modbusCmd)
             {
                 // prepare Modbus command
                 if (modbusCmd.Multiple || modbusCmd.DataBlock == DataBlock.Custom)
@@ -434,7 +448,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                 }
 
                 modbusCmd.InitReqPDU();
-                modbusCmd.InitReqADU(deviceModel.Addr, transMode);
+                modbusCmd.InitReqADU(model.Addr, transMode);
 
                 // send command to device
                 LastRequestOK = false;
@@ -442,7 +456,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
 
                 while (RequestNeeded(ref tryNum))
                 {
-                    if (modbusPoll.DoRequest(modbusCmd))
+                    // modbusPoll is always created together with deviceModel in InitModbusPoll
+                    if (modbusPoll!.DoRequest(modbusCmd))
                         LastRequestOK = true;
 
                     FinishRequest();

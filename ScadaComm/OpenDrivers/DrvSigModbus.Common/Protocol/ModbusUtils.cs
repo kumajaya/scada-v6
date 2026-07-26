@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System;
 using System.Globalization;
 
 namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
@@ -30,7 +29,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
 
         #region Tables for calculating CRC-16
         /* Table of CRC values for high–order byte */
-        private static readonly byte[] CRCHiTable = new byte[] {
+        private static ReadOnlySpan<byte> CRCHiTable => new byte[] {
             0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81,
             0x40, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0,
             0x80, 0x41, 0x01, 0xC0, 0x80, 0x41, 0x00, 0xC1, 0x81, 0x40, 0x00, 0xC1, 0x81, 0x40, 0x01,
@@ -52,7 +51,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         };
 
         /* Table of CRC values for low–order byte */
-        private static readonly byte[] CRCLoTable = new byte[] {
+        private static ReadOnlySpan<byte> CRCLoTable => new byte[] {
             0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4,
             0x04, 0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09,
             0x08, 0xC8, 0xD8, 0x18, 0x19, 0xD9, 0x1B, 0xDB, 0xDA, 0x1A, 0x1E, 0xDE, 0xDF, 0x1F, 0xDD,
@@ -79,15 +78,15 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// Calculates a 16-bit CRC.
         /// </summary>
         /// <remarks>The method is taken from the official Modbus specification.</remarks>
-        public static ushort CRC16(byte[] buffer, int offset, int length)
+        public static ushort CRC16(ReadOnlySpan<byte> buffer)
         {
             byte crcHi = 0xFF;   // high byte of CRC initialized
             byte crcLo = 0xFF;   // low byte of CRC initialized
             int index;           // will index into CRC lookup table
 
-            while (length-- > 0) // pass through message buffer
+            foreach (byte b in buffer) // pass through message buffer
             {
-                index = crcLo ^ buffer[offset++]; // calculate the CRC
+                index = crcLo ^ b; // calculate the CRC
                 crcLo = (byte)(crcHi ^ CRCHiTable[index]);
                 crcHi = CRCLoTable[index];
             }
@@ -96,15 +95,39 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         }
 
         /// <summary>
+        /// Calculates a 16-bit CRC.
+        /// </summary>
+        public static ushort CRC16(byte[] buffer, int offset, int length)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            if (offset < 0 || length < 0 || offset + length > buffer.Length)
+                throw new ArgumentOutOfRangeException();
+
+            return CRC16(new ReadOnlySpan<byte>(buffer, offset, length));
+        }
+
+        /// <summary>
         /// Calculates an LRC.
         /// </summary>
         /// <remarks>The method is taken from the official Modbus specification.</remarks>
-        public static byte LRC(byte[] buffer, int offset, int length)
+        public static byte LRC(ReadOnlySpan<byte> buffer)
         {
             byte uchLRC = 0;                // LRC char initialized
-            while (length-- > 0)            // pass through message buffer
-                uchLRC += buffer[offset++]; // add buffer byte without carry
+            foreach (byte b in buffer)      // pass through message buffer
+                uchLRC += b;                // add buffer byte without carry
             return (byte)(-(sbyte)uchLRC);  // return twos complement
+        }
+
+        /// <summary>
+        /// Calculates an LRC.
+        /// </summary>
+        public static byte LRC(byte[] buffer, int offset, int length)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            if (offset < 0 || length < 0 || offset + length > buffer.Length)
+                throw new ArgumentOutOfRangeException();
+
+            return LRC(new ReadOnlySpan<byte>(buffer, offset, length));
         }
 
         /// <summary>
@@ -188,7 +211,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Parses a byte order array from the string notation like '0123456789ABCDEF'.
         /// </summary>
-        public static int[] ParseByteOrder(string byteOrderStr)
+        public static int[]? ParseByteOrder(string byteOrderStr)
         {
             if (string.IsNullOrEmpty(byteOrderStr))
             {
@@ -212,29 +235,28 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Copies the array elements in the specified byte order.
         /// </summary>
-        public static void ApplyByteOrder(byte[] src, int srcOffset, byte[] dest, int destOffset, int count,
-            int[] byteOrder, bool reverse)
+        public static void ApplyByteOrder(ReadOnlySpan<byte> src, Span<byte> dest, int[]? byteOrder, bool reverse = false)
         {
-            int srcLen = src == null ? 0 : src.Length;
-            int endSrcInd = srcOffset + count - 1;
-            int ordLen = byteOrder == null ? 0 : byteOrder.Length;
+            int srcLen = src.Length;
+            int endSrcInd = srcLen - 1;
+            int ordLen = byteOrder?.Length ?? 0;
 
-            if (byteOrder == null)
+            if (byteOrder == null || ordLen == 0)
             {
                 // copy data without byte order
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < dest.Length; i++)
                 {
-                    int srcInd = reverse ? endSrcInd - i : srcOffset + i;
-                    dest[destOffset++] = 0 <= srcInd && srcInd < srcLen ? src[srcInd] : (byte)0;
+                    int srcInd = reverse ? endSrcInd - i : i;
+                    dest[i] = (0 <= srcInd && srcInd < srcLen) ? src[srcInd] : (byte)0;
                 }
             }
             else
             {
                 // copy data with byte order
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < dest.Length; i++)
                 {
-                    int srcInd = i < ordLen ? (reverse ? endSrcInd - byteOrder[i] : srcOffset + byteOrder[i]) : -1;
-                    dest[destOffset++] = 0 <= srcInd && srcInd < srcLen ? src[srcInd] : (byte)0;
+                    int srcInd = i < ordLen ? (reverse ? endSrcInd - byteOrder[i] : byteOrder[i]) : -1;
+                    dest[i] = (0 <= srcInd && srcInd < srcLen) ? src[srcInd] : (byte)0;
                 }
             }
         }
@@ -242,9 +264,36 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Copies the array elements in the specified byte order.
         /// </summary>
-        public static void ApplyByteOrder(byte[] src, byte[] dest, int[] byteOrder)
+        public static void ApplyByteOrder(byte[]? src, int srcOffset, byte[] dest, int destOffset, int count,
+            int[]? byteOrder, bool reverse)
         {
-            ApplyByteOrder(src, 0, dest, 0, dest.Length, byteOrder, false);
+            ArgumentNullException.ThrowIfNull(dest);
+            if (count < 0 || srcOffset < 0 || destOffset < 0)
+                throw new ArgumentOutOfRangeException();
+
+            if (count == 0)
+                return;
+
+            // src may legitimately be null (e.g. command data not yet set) - treat as all zeros,
+            // matching the original behavior instead of throwing.
+            ReadOnlySpan<byte> srcSpan = src == null
+                ? ReadOnlySpan<byte>.Empty
+                : new ReadOnlySpan<byte>(src, srcOffset, count);
+
+            ApplyByteOrder(
+                srcSpan,
+                new Span<byte>(dest, destOffset, count),
+                byteOrder,
+                reverse
+            );
+        }
+
+        /// <summary>
+        /// Copies the array elements in the specified byte order.
+        /// </summary>
+        public static void ApplyByteOrder(byte[]? src, byte[] dest, int[]? byteOrder)
+        {
+            ApplyByteOrder(src, dest, byteOrder, false);
         }
 
         /// <summary>
@@ -349,16 +398,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         {
             try
             {
-                string[] elems = (s ?? "").Split(ParseArraySeparator, StringSplitOptions.RemoveEmptyEntries);
-                int len = elems.Length;
-                double[] arr = new double[len];
+                if (string.IsNullOrWhiteSpace(s))
+                    return Array.Empty<double>();
 
-                for (int i = 0; i < len; i++)
+                string[] parts = s.Split(ParseArraySeparator, StringSplitOptions.RemoveEmptyEntries);
+                double[] result = new double[parts.Length];
+                for (int i = 0; i < parts.Length; i++)
                 {
-                    arr[i] = double.Parse(elems[i], CultureInfo.InvariantCulture);
+                    result[i] = double.Parse(parts[i], CultureInfo.InvariantCulture);
                 }
-
-                return arr;
+                return result;
             }
             catch (FormatException ex)
             {
@@ -375,6 +424,35 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                 return min2;
 
             return (value - min1) / (max1 - min1) * (max2 - min2) + min2;
+        }
+
+        /// <summary>
+        /// Gets the parsed scaling array, using a cache reference to avoid re-parsing.
+        /// </summary>
+        public static double[]? GetParsedScaling(string scaling, ref double[]? cache)
+        {
+            // If cache is already initialized, return it (or null if invalid)
+            if (cache != null)
+                return cache.Length == 4 ? cache : null;
+
+            // No cached result yet
+            if (string.IsNullOrWhiteSpace(scaling))
+                return null;
+
+            double[] parsed = ParseDoubleArray(scaling);
+            if (parsed.Length == 4 &&
+                Math.Abs(parsed[1] - parsed[0]) > 1e-9 &&
+                Math.Abs(parsed[3] - parsed[2]) > 1e-9)
+            {
+                cache = parsed;
+                return parsed;
+            }
+            else
+            {
+                // Mark as invalid to avoid retrying
+                cache = Array.Empty<double>();
+                return null;
+            }
         }
     }
 }

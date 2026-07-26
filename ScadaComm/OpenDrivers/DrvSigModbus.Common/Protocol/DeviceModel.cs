@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using System.Collections.Generic;
-
 namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
 {
     /// <summary>
@@ -11,8 +9,8 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
     /// </summary>
     public class DeviceModel
     {
-        private Dictionary<int, ModbusCmd> cmdByNum;     // the commands accessed by number
-        private Dictionary<string, ModbusCmd> cmdByCode; // the commands accessed by code
+        private Dictionary<int, ModbusCmd>? cmdByNum;     // the commands accessed by number
+        private Dictionary<string, ModbusCmd>? cmdByCode; // the commands accessed by code
 
         /// <summary>
         /// Initializes a new instance of the class.
@@ -81,18 +79,18 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         /// <summary>
         /// Gets a command by the specified number.
         /// </summary>
-        public ModbusCmd GetCmd(int cmdNum)
+        public ModbusCmd? GetCmd(int cmdNum)
         {
-            return cmdByNum != null && cmdNum > 0 && cmdByNum.TryGetValue(cmdNum, out ModbusCmd cmd) ? cmd : null;
+            return cmdByNum != null && cmdNum > 0 && cmdByNum.TryGetValue(cmdNum, out ModbusCmd? cmd) ? cmd : null;
         }
 
         /// <summary>
         /// Gets a command by the specified code.
         /// </summary>
-        public ModbusCmd GetCmd(string cmdCode)
+        public ModbusCmd? GetCmd(string cmdCode)
         {
             return cmdByCode != null && !string.IsNullOrEmpty(cmdCode) &&
-                cmdByCode.TryGetValue(cmdCode, out ModbusCmd cmd) ? cmd : null;
+                cmdByCode.TryGetValue(cmdCode, out ModbusCmd? cmd) ? cmd : null;
         }
     }
 }
