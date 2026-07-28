@@ -143,12 +143,19 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Config
 
                 if (scalingEnabled && !string.IsNullOrWhiteSpace(elemConfig.Scaling))
                 {
-                    double[] scaling = ModbusUtils.ParseDoubleArray(elemConfig.Scaling);
-                    if (scaling.Length == 4 &&
-                        Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
-                        Math.Abs(scaling[3] - scaling[2]) > 1e-9)
+                    try
                     {
-                        elemElem.SetAttribute("scaling", elemConfig.Scaling);
+                        double[] scaling = ModbusUtils.ParseDoubleArray(elemConfig.Scaling);
+                        if (scaling.Length == 4 &&
+                            Math.Abs(scaling[1] - scaling[0]) > 1e-9 &&
+                            Math.Abs(scaling[3] - scaling[2]) > 1e-9)
+                        {
+                            elemElem.SetAttribute("scaling", elemConfig.Scaling);
+                        }
+                    }
+                    catch (FormatException)
+                    {
+                        // Malformed scaling string: skip saving it instead of crashing.
                     }
                 }
 

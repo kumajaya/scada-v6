@@ -430,21 +430,33 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             if ((model.GetCmd(cmd.CmdCode) ?? model.GetCmd(cmd.CmdNum)) is ModbusCmd modbusCmd)
             {
                 // prepare Modbus command
-                if (modbusCmd.Multiple || modbusCmd.DataBlock == DataBlock.Custom)
+                try
                 {
-                    modbusCmd.Value = 0;
+                    if (modbusCmd.Multiple || modbusCmd.DataBlock == DataBlock.Custom)
+                    {
+                        modbusCmd.Value = 0;
 
-                    if (cmd.CmdData != null && cmd.CmdData.Length > 0)
-                        modbusCmd.Data = cmd.CmdData;
+                        if (cmd.CmdData != null && cmd.CmdData.Length > 0)
+                            modbusCmd.Data = cmd.CmdData;
+                        else
+                            modbusCmd.SetCmdData(cmd.CmdVal);
+                    }
                     else
+                    {
+                        modbusCmd.Value = modbusCmd.DataBlock == DataBlock.HoldingRegisters
+                            ? (ushort)cmd.CmdVal
+                            : (ushort)(cmd.CmdVal > 0 ? 1 : 0);
                         modbusCmd.SetCmdData(cmd.CmdVal);
+                    }
                 }
-                else
+                catch (ArgumentException ex)
                 {
-                    modbusCmd.Value = modbusCmd.DataBlock == DataBlock.HoldingRegisters
-                        ? (ushort)cmd.CmdVal
-                        : (ushort)(cmd.CmdVal > 0 ? 1 : 0);
-                    modbusCmd.SetCmdData(cmd.CmdVal);
+                    LastRequestOK = false;
+                    Log.WriteLine(Locale.IsRussian ?
+                        $"Невозможно отправить команду: {ex.Message}" :
+                        $"Unable to send the command: {ex.Message}");
+                    FinishCommand();
+                    return;
                 }
 
                 modbusCmd.InitReqPDU();

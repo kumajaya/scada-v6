@@ -439,7 +439,19 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             if (string.IsNullOrWhiteSpace(scaling))
                 return null;
 
-            double[] parsed = ParseDoubleArray(scaling);
+            double[] parsed;
+            try
+            {
+                parsed = ParseDoubleArray(scaling);
+            }
+            catch (FormatException)
+            {
+                // Malformed scaling string: treat as invalid instead of throwing,
+                // so a bad template value can't crash polling (Session) or command sending.
+                cache = Array.Empty<double>();
+                return null;
+            }
+
             if (parsed.Length == 4 &&
                 Math.Abs(parsed[1] - parsed[0]) > 1e-9 &&
                 Math.Abs(parsed[3] - parsed[2]) > 1e-9)
