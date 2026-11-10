@@ -184,7 +184,12 @@ namespace Scada
             if (assembly == null)
                 throw new ArgumentNullException(nameof(assembly));
 
-            Init(Path.GetDirectoryName(assembly.Location));
+#pragma warning disable IL3000
+            string assemblyLocation = assembly.Location;
+#pragma warning restore IL3000
+            Init(string.IsNullOrEmpty(assemblyLocation)
+                ? AppContext.BaseDirectory
+                : Path.GetDirectoryName(assemblyLocation));
         }
 
         /// <summary>

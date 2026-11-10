@@ -84,7 +84,12 @@ namespace Scada
             errMsg = "";
 
             // search in the directory of the requesting assembly
-            string assemblyDir = Path.GetDirectoryName(requestingAssembly.Location);
+#pragma warning disable IL3000
+            string assemblyLocation = requestingAssembly.Location;
+#pragma warning restore IL3000
+            string assemblyDir = string.IsNullOrEmpty(assemblyLocation)
+                ? AppContext.BaseDirectory
+                : Path.GetDirectoryName(assemblyLocation);
             Assembly assembly =
                 LoadAssembly(shortFileName, assemblyDir) ??
                 LoadAssembly(shortFileName, Path.Combine(assemblyDir, requestingAssembly.GetName().Name));
