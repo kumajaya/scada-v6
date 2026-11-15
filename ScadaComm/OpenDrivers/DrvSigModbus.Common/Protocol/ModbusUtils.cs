@@ -436,6 +436,28 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
         }
 
         /// <summary>
+        /// Checks whether the scaling string is empty or contains four numbers
+        /// that define two non-degenerate ranges.
+        /// </summary>
+        public static bool IsValidScaling(string? scaling)
+        {
+            if (string.IsNullOrWhiteSpace(scaling))
+                return true;
+
+            try
+            {
+                double[] parsed = ParseDoubleArray(scaling);
+                return parsed.Length == 4 &&
+                    Math.Abs(parsed[1] - parsed[0]) > 1e-9 &&
+                    Math.Abs(parsed[3] - parsed[2]) > 1e-9;
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Gets the parsed scaling array, using a cache reference to avoid re-parsing.
         /// </summary>
         public static double[]? GetParsedScaling(string scaling, ref double[]? cache)

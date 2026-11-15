@@ -63,6 +63,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 chkElemReadOnly.Checked = false;
                 chkElemIsBitMask.Checked = false;
                 txtElemScaling.Text = "";
+                txtElemScaling.BackColor = SystemColors.Window;
                 gbElem.Enabled = false;
             }
             else
@@ -127,9 +128,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
                 chkElemIsBitMask.Checked = elem.IsBitMask;
                 chkElemIsBitMask.Enabled = elemGroup.BitMaskEnabled;
                 txtElemScaling.Text = elem.Scaling;
-                txtElemScaling.Enabled = elemGroup.ScalingEnabled &&
-                        elem.ElemType != ElemType.Undefined &&
-                        elem.ElemType != ElemType.Bool;
+                ShowScalingState(elemGroup, elem);
                 gbElem.Enabled = true;
             }
         }
@@ -211,10 +210,7 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
                 elemTag.Elem.ElemType = elemType;
                 txtElemAddress.Text = elemTag.AddressRange;
-                txtElemScaling.Text = elemTag.Elem.Scaling;
-                txtElemScaling.Enabled = elemTag.ElemGroup.ScalingEnabled &&
-                        elemType != ElemType.Undefined &&
-                        elemType != ElemType.Bool;
+                ShowScalingState(elemTag.ElemGroup, elemTag.Elem);
                 OnObjectChanged(TreeUpdateTypes.CurrentNode | TreeUpdateTypes.NextSiblings);
             }
         }
@@ -245,38 +241,33 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             if (elemTag != null)
             {
                 elemTag.Elem.IsBitMask = chkElemIsBitMask.Checked;
+                ShowScalingState(elemTag.ElemGroup, elemTag.Elem);
                 OnObjectChanged(TreeUpdateTypes.None);
             }
         }
 
         private void txtScaling_TextChanged(object sender, EventArgs e)
         {
-            if (elemTag == null) return;
-            string scalingText = txtElemScaling.Text.Trim();
-            if (string.IsNullOrEmpty(scalingText))
+            // update scaling; an invalid value is kept as typed and marked,
+            // it is not saved to the template
+            if (elemTag != null)
             {
-                elemTag.Elem.Scaling = "";
-                txtElemScaling.BackColor = SystemColors.Window;
+                elemTag.Elem.Scaling = txtElemScaling.Text.Trim();
+                ShowScalingState(elemTag.ElemGroup, elemTag.Elem);
+                OnObjectChanged(TreeUpdateTypes.None);
             }
-            else
-            {
-                try
-                {
-                    double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
-                    if (scaling.Length != 4 || Math.Abs(scaling[0] - scaling[1]) < 1e-9 || Math.Abs(scaling[2] - scaling[3]) < 1e-9)
-                        txtElemScaling.BackColor = Color.LightCoral;
-                    else
-                    {
-                        elemTag.Elem.Scaling = scalingText;
-                        txtElemScaling.BackColor = SystemColors.Window;
-                    }
-                }
-                catch
-                {
-                    txtElemScaling.BackColor = Color.LightCoral;
-                }
-            }
-            OnObjectChanged(TreeUpdateTypes.None);
+        }
+
+        /// <summary>
+        /// Enables the scaling for numeric elements without a bit mask and marks an invalid value.
+        /// </summary>
+        private void ShowScalingState(ElemGroupConfig elemGroup, ElemConfig elem)
+        {
+            txtElemScaling.Enabled = elemGroup.ScalingEnabled && !elem.IsBitMask &&
+                elem.ElemType != ElemType.Undefined && elem.ElemType != ElemType.Bool;
+            txtElemScaling.BackColor = !txtElemScaling.Enabled || ModbusUtils.IsValidScaling(txtElemScaling.Text)
+                ? SystemColors.Window
+                : Color.LightCoral;
         }
     }
 }

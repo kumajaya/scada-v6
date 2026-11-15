@@ -68,8 +68,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
             modbusCmd.ByteOrder = ModbusUtils.ParseByteOrder(elemConfig.ByteOrder) ??
                 options.GetDefaultByteOrder(ModbusUtils.GetDataLength(elemConfig.ElemType));
             // Filter scaling: only for numeric types
-            modbusCmd.Scaling = (elemConfig.ElemType != ElemType.Undefined && elemConfig.ElemType != ElemType.Bool) 
-                ? elemConfig.Scaling 
+            modbusCmd.Scaling = (elemConfig.ElemType != ElemType.Undefined && elemConfig.ElemType != ElemType.Bool &&
+                !elemConfig.IsBitMask)
+                ? elemConfig.Scaling
                 : "";
             modbusCmd.CmdNum = 0;
             modbusCmd.CmdCode = elemConfig.TagCode;
@@ -299,8 +300,9 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                         elem.ByteOrder = ModbusUtils.ParseByteOrder(elemConfig.ByteOrder) ??
                             deviceTemplate.Options.GetDefaultByteOrder(ModbusUtils.GetDataLength(elemConfig.ElemType));
                         // Filter scaling: only for numeric types
-                        elem.Scaling = (elem.ElemType != ElemType.Undefined && elem.ElemType != ElemType.Bool) 
-                            ? elemConfig.Scaling 
+                        elem.Scaling = (elem.ElemType != ElemType.Undefined && elem.ElemType != ElemType.Bool &&
+                            !elemConfig.IsBitMask)
+                            ? elemConfig.Scaling
                             : "";
                         elemGroup.Elems.Add(elem);
                     }

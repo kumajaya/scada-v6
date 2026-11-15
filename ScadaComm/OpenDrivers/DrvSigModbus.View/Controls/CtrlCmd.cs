@@ -209,14 +209,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
             {
                 txtCmdScaling.Text = cmd.Scaling;
                 // Disable scaling for Bool and Undefined types
-                bool isNumeric = cmd.ElemType != ElemType.Undefined && cmd.ElemType != ElemType.Bool;
-                txtCmdScaling.Enabled = isNumeric;
-                txtCmdScaling.BackColor = isNumeric ? SystemColors.Window : SystemColors.Control;
+                txtCmdScaling.Enabled = cmd.ElemType != ElemType.Undefined && cmd.ElemType != ElemType.Bool;
+                txtCmdScaling.BackColor = !txtCmdScaling.Enabled || ModbusUtils.IsValidScaling(txtCmdScaling.Text)
+                    ? SystemColors.Window
+                    : Color.LightCoral;
             }
             else
             {
                 txtCmdScaling.Text = "";
                 txtCmdScaling.Enabled = false;
+                txtCmdScaling.BackColor = SystemColors.Window;
             }
         }
 
@@ -409,32 +411,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.View.Controls
 
         private void txtCmdScaling_TextChanged(object sender, EventArgs e)
         {
-            if (cmd == null) return;
-            string scalingText = txtCmdScaling.Text.Trim();
-            if (string.IsNullOrEmpty(scalingText))
+            // update scaling; an invalid value is kept as typed and marked,
+            // it is not saved to the template
+            if (cmd != null)
             {
-                cmd.Scaling = "";
-                txtCmdScaling.BackColor = SystemColors.Window;
+                cmd.Scaling = txtCmdScaling.Text.Trim();
+                txtCmdScaling.BackColor = !txtCmdScaling.Enabled || ModbusUtils.IsValidScaling(cmd.Scaling)
+                    ? SystemColors.Window
+                    : Color.LightCoral;
+                OnObjectChanged(TreeUpdateTypes.None);
             }
-            else
-            {
-                try
-                {
-                    double[] scaling = ModbusUtils.ParseDoubleArray(scalingText);
-                    if (scaling.Length != 4 || Math.Abs(scaling[0] - scaling[1]) < 1e-9 || Math.Abs(scaling[2] - scaling[3]) < 1e-9)
-                        txtCmdScaling.BackColor = Color.LightCoral;
-                    else
-                    {
-                        cmd.Scaling = scalingText;
-                        txtCmdScaling.BackColor = SystemColors.Window;
-                    }
-                }
-                catch
-                {
-                    txtCmdScaling.BackColor = Color.LightCoral;
-                }
-            }
-            OnObjectChanged(TreeUpdateTypes.None);
         }
     }
 }
