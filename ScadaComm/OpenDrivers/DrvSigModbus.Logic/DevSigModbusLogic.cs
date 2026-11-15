@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Rapid Software LLC. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Buffers.Binary;
 using Scada.Comm.Config;
 using Scada.Comm.Devices;
 using Scada.Comm.Drivers.DrvSigModbus.Config;
@@ -443,10 +444,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Logic
                     }
                     else
                     {
-                        modbusCmd.Value = modbusCmd.DataBlock == DataBlock.HoldingRegisters
-                            ? (ushort)cmd.CmdVal
-                            : (ushort)(cmd.CmdVal > 0 ? 1 : 0);
                         modbusCmd.SetCmdData(cmd.CmdVal);
+
+                        // WriteSingleRegister sends Value, not Data: take the register from the 2-byte
+                        // big-endian Data so that negative Short values are encoded correctly
+                        // (a double to ushort cast saturates to 0 on .NET 9 and later)
+                        modbusCmd.Value = modbusCmd.DataBlock == DataBlock.HoldingRegisters
+                            ? (modbusCmd.Data is { Length: 2 } data
+                                ? BinaryPrimitives.ReadUInt16BigEndian(data)
+                                : (ushort)cmd.CmdVal)
+                            : (ushort)(cmd.CmdVal > 0 ? 1 : 0);
                     }
                 }
                 catch (ArgumentException ex)

@@ -279,6 +279,16 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
                 }
             }
 
+            // Reject values that cannot be encoded: NaN or infinity would be sent as 0 or an
+            // arbitrary value, and a Float beyond its range would be sent as infinity
+            if (ElemType != ElemType.Undefined && ElemType != ElemType.Bool)
+            {
+                if (!double.IsFinite(rawVal))
+                    throw new ArgumentException($"Value {rawVal} is not a finite number.");
+                if (ElemType == ElemType.Float && Math.Abs(rawVal) > float.MaxValue)
+                    throw new ArgumentException($"Value {rawVal} is out of range for Float.");
+            }
+
             // Directly allocate Data with correct endianness (Big-Endian, no reverse needed)
             switch (ElemType)
             {
