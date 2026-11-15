@@ -268,24 +268,33 @@ namespace Scada.Comm.Drivers.DrvSigModbus.Protocol
             int[]? byteOrder, bool reverse)
         {
             ArgumentNullException.ThrowIfNull(dest);
-            if (count < 0 || srcOffset < 0 || destOffset < 0)
-                throw new ArgumentOutOfRangeException();
 
-            if (count == 0)
-                return;
+            // Index the source array directly, as the original implementation did: a source
+            // that is null or shorter than srcOffset + count yields zeros for the missing bytes
+            // instead of throwing (e.g. a multiple write command whose data covers only the
+            // first element, or binary command data shorter than the request).
+            int srcLen = src == null ? 0 : src.Length;
+            int endSrcInd = srcOffset + count - 1;
+            int ordLen = byteOrder == null ? 0 : byteOrder.Length;
 
-            // src may legitimately be null (e.g. command data not yet set) - treat as all zeros,
-            // matching the original behavior instead of throwing.
-            ReadOnlySpan<byte> srcSpan = src == null
-                ? ReadOnlySpan<byte>.Empty
-                : new ReadOnlySpan<byte>(src, srcOffset, count);
-
-            ApplyByteOrder(
-                srcSpan,
-                new Span<byte>(dest, destOffset, count),
-                byteOrder,
-                reverse
-            );
+            if (byteOrder == null)
+            {
+                // copy data without byte order
+                for (int i = 0; i < count; i++)
+                {
+                    int srcInd = reverse ? endSrcInd - i : srcOffset + i;
+                    dest[destOffset++] = 0 <= srcInd && srcInd < srcLen ? src![srcInd] : (byte)0;
+                }
+            }
+            else
+            {
+                // copy data with byte order
+                for (int i = 0; i < count; i++)
+                {
+                    int srcInd = i < ordLen ? (reverse ? endSrcInd - byteOrder[i] : srcOffset + byteOrder[i]) : -1;
+                    dest[destOffset++] = 0 <= srcInd && srcInd < srcLen ? src![srcInd] : (byte)0;
+                }
+            }
         }
 
         /// <summary>
