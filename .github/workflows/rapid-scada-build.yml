@@ -36,10 +36,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET SDK 10.0
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
@@ -53,7 +53,7 @@ jobs:
           dotnet new globaljson --sdk-version "$sdk" --roll-forward latestPatch --force
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/global.json') }}
@@ -80,7 +80,7 @@ jobs:
 
       - name: Upload build artifacts
         if: ${{ inputs.dotnetCommand == 'build' && success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rapid-scada-${{ inputs.buildTarget }}-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
           path: |
@@ -100,7 +100,7 @@ jobs:
 
       - name: Upload publish artifacts
         if: ${{ inputs.dotnetCommand == 'build' && success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: scadaadmin-${{ inputs.buildTarget }}-win-x64-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
           path: artifacts/ScadaAdmin/**
@@ -112,10 +112,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup .NET SDK 10.0
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v5
         with:
           dotnet-version: '10.0.x'
 
@@ -129,7 +129,7 @@ jobs:
           dotnet new globaljson --sdk-version "$sdk" --roll-forward latestPatch --force
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json', '**/global.json') }}
@@ -149,7 +149,7 @@ jobs:
 
       - name: Upload build artifacts
         if: ${{ inputs.dotnetCommand == 'build' && success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: rapid-scada-${{ inputs.buildTarget }}-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
           path: |
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload publish artifacts
         if: ${{ inputs.dotnetCommand == 'build' && success() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: scadaadmin-${{ inputs.buildTarget }}-win-x64-${{ inputs.dotnetConfiguration }}-${{ github.sha }}
           path: artifacts/ScadaAdmin/**
