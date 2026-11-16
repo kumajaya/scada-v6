@@ -31,17 +31,26 @@ on:
 jobs:
   build-linux:
     if: ${{ github.event.inputs.buildTarget == 'linux' }}
-    name: Build on Linux (.NET 8)
+    name: Build on Linux (.NET 10)
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET SDK 8.0
+      - name: Setup .NET SDK 10.0
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
+
+      # The runner image ships newer SDKs and dotnet picks the highest one
+      # unless a global.json says otherwise; pin the build to SDK 10 (LTS).
+      # The file exists only in the runner checkout, not in the repository.
+      - name: Pin .NET SDK 10.0
+        shell: bash
+        run: |
+          sdk=$(dotnet --list-sdks | awk '/^10\./{v=$1} END{print v}')
+          dotnet new globaljson --sdk-version "$sdk" --roll-forward latestPatch --force
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
@@ -98,17 +107,26 @@ jobs:
 
   build-windows:
     if: ${{ github.event.inputs.buildTarget == 'windows' }}
-    name: Build on Windows (.NET 8)
+    name: Build on Windows (.NET 10)
     runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET SDK 8.0
+      - name: Setup .NET SDK 10.0
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
+
+      # The runner image ships newer SDKs and dotnet picks the highest one
+      # unless a global.json says otherwise; pin the build to SDK 10 (LTS).
+      # The file exists only in the runner checkout, not in the repository.
+      - name: Pin .NET SDK 10.0
+        shell: bash
+        run: |
+          sdk=$(dotnet --list-sdks | awk '/^10\./{v=$1} END{print v}')
+          dotnet new globaljson --sdk-version "$sdk" --roll-forward latestPatch --force
 
       - name: Cache NuGet packages
         uses: actions/cache@v4

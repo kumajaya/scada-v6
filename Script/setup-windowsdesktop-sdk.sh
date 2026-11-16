@@ -4,14 +4,15 @@ set -euo pipefail
 LIST=$(dotnet --list-sdks 2>/dev/null || true)
 [ -n "$LIST" ] || { echo "Error: .NET SDK not found."; exit 1; }
 
-SDK=${1:-$(awk '/^8\./{v=$1}END{print v}' <<<"$LIST")}
-[ -n "$SDK" ] || { echo "Error: No 8.x SDK found."; exit 1; }
+# Default: the SDK that dotnet resolves here (honours global.json)
+SDK=${1:-$(dotnet --version 2>/dev/null || true)}
+[ -n "$SDK" ] || { echo "Error: Unable to determine the .NET SDK version."; exit 1; }
 
 ROOT=$(dirname "$(awk -v v="$SDK" '$1==v{gsub(/[\[\]]/,"",$2);print $2;exit}' <<<"$LIST")")
 DST="$ROOT/sdk/$SDK/Sdks"
 TMP="$HOME/.dotnet-windowsdesktop/$SDK"
 ZIP="$TMP/win.zip"
-URL="https://dotnetcli.azureedge.net/dotnet/Sdk/$SDK/dotnet-sdk-$SDK-win-x64.zip"
+URL="https://builds.dotnet.microsoft.com/dotnet/Sdk/$SDK/dotnet-sdk-$SDK-win-x64.zip"
 
 echo "SDK $SDK"
 [[ -d "$DST/Microsoft.NET.Sdk.WindowsDesktop" ]] && { echo "Already injected"; exit 0; }
