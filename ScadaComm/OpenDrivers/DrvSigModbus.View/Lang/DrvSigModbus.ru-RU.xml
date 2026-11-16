@@ -33,7 +33,7 @@
     <Phrase key="lblCmdByteOrder">Порядок байт</Phrase>
     <Phrase key="lblCmdByteOrderExample">Например, 01234567</Phrase>
     <Phrase key="lblCmdScaling">Обратное масштабирование</Phrase>
-    <Phrase key="lblCmdScalingExample">Например, 0;65535;0;35</Phrase>
+    <Phrase key="lblCmdScalingExample">Напр., 0;65535;0;35</Phrase>
   </Dictionary>
   <Dictionary key="Scada.Comm.Drivers.DrvSigModbus.View.Controls.CtrlElem">
     <Phrase key="gbElem">Параметры элемента</Phrase>
@@ -57,7 +57,7 @@
     <Phrase key="chkElemReadOnly">Только чтение</Phrase>
     <Phrase key="chkElemIsBitMask">Битовая маска</Phrase>
     <Phrase key="lblElemScaling">Масштабирование</Phrase>
-    <Phrase key="lblElemScalingExample">Например, 0;65535;0;35</Phrase>
+    <Phrase key="lblElemScalingExample">Напр., 0;65535;0;35</Phrase>
   </Dictionary>
   <Dictionary key="Scada.Comm.Drivers.DrvSigModbus.View.Controls.CtrlElemGroup">
     <Phrase key="gbElemGroup">Параметры группы элементов</Phrase>

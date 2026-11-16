@@ -33,7 +33,7 @@
     <Phrase key="lblCmdByteOrder">Urutan byte</Phrase>
     <Phrase key="lblCmdByteOrderExample">Misalnya, 01234567</Phrase>
     <Phrase key="lblCmdScaling">Skala balik</Phrase>
-    <Phrase key="lblCmdScalingExample">Misalnya, 0;65535;0;35</Phrase>
+    <Phrase key="lblCmdScalingExample">Mis., 0;65535;0;35</Phrase>
   </Dictionary>
   <Dictionary key="Scada.Comm.Drivers.DrvSigModbus.View.Controls.CtrlElem">
     <Phrase key="gbElem">Parameter Elemen</Phrase>
@@ -57,7 +57,7 @@
     <Phrase key="chkElemReadOnly">Baca saja</Phrase>
     <Phrase key="chkElemIsBitMask">Masker bit</Phrase>
     <Phrase key="lblElemScaling">Skala</Phrase>
-    <Phrase key="lblElemScalingExample">Misalnya, 0;65535;0;35</Phrase>
+    <Phrase key="lblElemScalingExample">Mis., 0;65535;0;35</Phrase>
   </Dictionary>
   <Dictionary key="Scada.Comm.Drivers.DrvSigModbus.View.Controls.CtrlElemGroup">
     <Phrase key="gbElemGroup">Parameter Grup Elemen</Phrase>

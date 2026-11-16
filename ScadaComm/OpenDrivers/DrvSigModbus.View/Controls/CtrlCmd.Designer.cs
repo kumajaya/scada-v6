@@ -120,9 +120,9 @@
             this.lblCmdScalingExample.ForeColor = System.Drawing.SystemColors.GrayText;
             this.lblCmdScalingExample.Location = new System.Drawing.Point(137, 154);
             this.lblCmdScalingExample.Name = "lblCmdScalingExample";
-            this.lblCmdScalingExample.Size = new System.Drawing.Size(126, 15);
+            this.lblCmdScalingExample.Size = new System.Drawing.Size(107, 15);
             this.lblCmdScalingExample.TabIndex = 12;
-            this.lblCmdScalingExample.Text = "For example, 0;65535;0;35";
+            this.lblCmdScalingExample.Text = "E.g., 0;65535;0;35";
             // 
             // txtCmdScaling
             // 

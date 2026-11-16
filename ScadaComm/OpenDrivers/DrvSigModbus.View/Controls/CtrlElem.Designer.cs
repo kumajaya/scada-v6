@@ -106,9 +106,9 @@
             this.lblElemScalingExample.ForeColor = System.Drawing.SystemColors.GrayText;
             this.lblElemScalingExample.Location = new System.Drawing.Point(150, 407);
             this.lblElemScalingExample.Name = "lblElemScalingExample";
-            this.lblElemScalingExample.Size = new System.Drawing.Size(126, 15);
+            this.lblElemScalingExample.Size = new System.Drawing.Size(107, 15);
             this.lblElemScalingExample.TabIndex = 26;
-            this.lblElemScalingExample.Text = "For example, 0;65535;0;35";
+            this.lblElemScalingExample.Text = "E.g., 0;65535;0;35";
             // 
             // txtElemScaling
             // 
